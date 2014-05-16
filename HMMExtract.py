@@ -17,8 +17,9 @@ import sys
 import subprocess
 import tempfile
 import sqlite3
+import cStringIO
 from Bio import SeqIO
-from Bio.SearchIO import HmmerIO
+from Bio import SearchIO  
 from multiprocessing import cpu_count
 
 processors = cpu_count() # Gets number of processor cores for HMMER.
@@ -83,8 +84,5 @@ except IOError:
 	sys.exit(1)
 
 AnnotationFASTADict = getProtienAnnotationFasta(record) 
-print AnnotationFASTADict.values()
 
-
-
-	
+Blam = SearchIO.parse()
