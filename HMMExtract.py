@@ -15,9 +15,10 @@
 	
 import sys
 import subprocess
-import tempfile
 import sqlite3
+import tempfile
 import cStringIO
+from os import path
 from Bio import SeqIO
 from Bio import SearchIO  
 from multiprocessing import cpu_count
@@ -35,6 +36,17 @@ def argsCheck(numArgs):
 		print "Usage: " + sys.argv[0] + " <organism.gbk> <hmm.hmm> <sqldb.sqlite>"
 		print "Examples: " + sys.argv[0] + " ecoli.gbk helicase.hmm helicasedb.sqlite"
 		sys.exit(1) # Aborts program. (exit(1) indicates that an error occurred)
+#------------------------------------------------------------------------------------------------------------
+# 2: Runs HMMER with settings specific for extracting subject sequences.
+def runHMMSearch(FASTA, HMMERDBFile):
+	Found16S = True
+	process = subprocess.Popen(["hmmsearch", "--acc", "--cpu", str(processors), HMMERDBFile, "-"], stdin = subprocess.PIPE, stdout = subprocess.PIPE, bufsize = 1)
+	stdout, error = process.communicate(FASTA) # This returns a list with both stderr and stdout. Only want stdout which is first element.
+	if error:
+		print error
+		sys.exit(1)
+	else:
+		return stdout
 #------------------------------------------------------------------------------------------------------------
 # 3: When passed a sequence record object returns an array of fasta strings for each annotation.
 def getProtienAnnotationFasta(seqRecord):
@@ -61,12 +73,18 @@ def getProtienAnnotationFasta(seqRecord):
 argsCheck(4) # Checks if the number of arguments are correct.
 
 # Stores file one for input checking.
-print ">> Starting Up..."
+print ">> Starting up..."
 OrganismFile = sys.argv[1]
 HMMFile      = sys.argv[2]
 sqlFile      = sys.argv[3]
 
+dirname, basename = path.split(OrganismFile)
+basename = basename.rstrip(".gbk") + "."
+tempFASTAFile = tempfile.NamedTemporaryFile(prefix = basename, dir = dirname, suffix = ".fasta")
+print(tempFASTAFile.name)
+
 # File extension checks
+print ">> Performing file extention checks..."
 if not OrganismFile.endswith(".gbk"):
 	print "[Warning] " + OrganismFile + " may not be a genbank file!"
 if not HMMFile.endswith(".hmm"):
@@ -76,6 +94,7 @@ if not sqlFile.endswith(".sqlite"):
 
 # Read in genbank file as a sequence record object.
 try:
+	print ">> Opening Genbank File..."
 	handle = open(OrganismFile, "rU")
 	record = SeqIO.read(handle, "genbank")
 	handle.close()
@@ -83,6 +102,17 @@ except IOError:
 	print "Failed to open " + OrganismFile
 	sys.exit(1)
 
-AnnotationFASTADict = getProtienAnnotationFasta(record) 
+print ">> Extracting Protein Annotations..."
+AnnotationFASTADict = getProtienAnnotationFasta(record) # Creates a dictionary containing all protein annotations in the gbk file.
+FASTAString = "".join(AnnotationFASTADict.values()) # Saves these annotations to a string.
 
-Blam = SearchIO.parse()
+print ">> Running HMM Search..."
+#HMMOutput = cStringIO.StringIO() 
+OPFILE = open("BLAM.txt", "w")
+OPFILE.write(runHMMSearch(FASTAString, HMMFile)) # Runs HMMER on the FASTA string and gets the results and saves them to string stream.
+OPFILE.close()
+
+print ">> Parsing HMM Results..."
+HMMERResults = list(SearchIO.parse("BLAM.txt", "hmmer3-text"))
+
+print HMMERResults
