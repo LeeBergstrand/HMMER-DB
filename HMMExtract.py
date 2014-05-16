@@ -38,9 +38,9 @@ def argsCheck(numArgs):
 		sys.exit(1) # Aborts program. (exit(1) indicates that an error occurred)
 #------------------------------------------------------------------------------------------------------------
 # 2: Runs HMMER with settings specific for extracting subject sequences.
-def runHMMSearch(FASTA, HMMERDBFile):
+def runHMMSearch(FASTA, HMMERDBFile, tempHMMTTabFile):
 	Found16S = True
-	process = subprocess.Popen(["hmmsearch", "--acc", "--cpu", str(processors), HMMERDBFile, "-"], stdin = subprocess.PIPE, stdout = subprocess.PIPE, bufsize = 1)
+	process = subprocess.Popen(["hmmsearch", "--acc", "--cpu", str(processors), "--pfamtblout", tempHMMTTabFile.name, HMMERDBFile, "-"], stdin = subprocess.PIPE, stdout = subprocess.PIPE, bufsize = 1)
 	stdout, error = process.communicate(FASTA) # This returns a list with both stderr and stdout. Only want stdout which is first element.
 	if error:
 		print error
@@ -79,9 +79,9 @@ HMMFile      = sys.argv[2]
 sqlFile      = sys.argv[3]
 
 dirname, basename = path.split(OrganismFile)
-basename = basename.rstrip(".gbk") + "."
-tempFASTAFile = tempfile.NamedTemporaryFile(prefix = basename, dir = dirname, suffix = ".fasta")
-print(tempFASTAFile.name)
+basename = basename.rstrip(".gbk")
+
+tempHMMTTabFile = tempfile.NamedTemporaryFile(prefix = basename, dir = dirname, suffix = ".hmmer") # Creates temporary for hmmer to write to.
 
 # File extension checks
 print ">> Performing file extention checks..."
@@ -106,13 +106,6 @@ print ">> Extracting Protein Annotations..."
 AnnotationFASTADict = getProtienAnnotationFasta(record) # Creates a dictionary containing all protein annotations in the gbk file.
 FASTAString = "".join(AnnotationFASTADict.values()) # Saves these annotations to a string.
 
-print ">> Running HMM Search..."
-#HMMOutput = cStringIO.StringIO() 
-OPFILE = open("BLAM.txt", "w")
-OPFILE.write(runHMMSearch(FASTAString, HMMFile)) # Runs HMMER on the FASTA string and gets the results and saves them to string stream.
-OPFILE.close()
+runHMMSearch(FASTAString, HMMFile, tempHMMTTabFile) # Runs hmmer and writes to temporary file.
 
-print ">> Parsing HMM Results..."
-HMMERResults = list(SearchIO.parse("BLAM.txt", "hmmer3-text"))
-
-print HMMERResults
+print tempHMMTTabFile.read()
