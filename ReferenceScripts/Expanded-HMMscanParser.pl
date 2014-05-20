@@ -23,6 +23,7 @@ while(<>)
 	{
 		$x=join("",@a);
 		($q)=($x=~/^Query:\s+(\S+)/m);
+		
 		while($x=~/^>> (\S+.*?\n\n)/msg)
 		{
 			$a=$&;
@@ -34,11 +35,15 @@ while(<>)
 				print $q."\t".$c[0]."\t$d[6]\t$d[7]\t$d[8]\t$d[10]\t$d[11]\n" if $d[6]<1;
 			}
 		}
-		@a=();}else{push(@a,$_);
+		@a=();
+	}
+	else
+	{
+		push(@a,$_);
 	}
 }
 
-| sort -k 1,1 -k 6,6n -k 7,7n | uniq \| perl -e
+#| sort -k 1,1 -k 6,6n -k 7,7n | uniq \| perl -e
 while(<>)
 {
 	chomp;
