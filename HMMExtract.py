@@ -46,7 +46,7 @@ def runHMMSearch(FASTA, HMMERDBFile, tempHMMTTabFile):
 		print error
 		sys.exit(1)
 	else:
-		return stdout
+		print stdout
 #------------------------------------------------------------------------------------------------------------
 # 3: When passed a sequence record object returns an array of fasta strings for each annotation.
 def getProtienAnnotationFasta(seqRecord):
@@ -108,4 +108,19 @@ FASTAString = "".join(AnnotationFASTADict.values()) # Saves these annotations to
 
 runHMMSearch(FASTAString, HMMFile, tempHMMTTabFile) # Runs hmmer and writes to temporary file.
 
-print tempHMMTTabFile.read()
+HMMResults = tempHMMTTabFile.read()
+print HMMResults
+HMMResults = HMMResults.split("Domain scores")[1] # Extracts domain scores.
+print HMMResults
+HMMResults = HMMResults.splitlines()
+
+HMMResultsCleaned = []
+for i in HMMResults:
+	if "#" not in i:
+		HMMResultsCleaned.append(i)
+del HMMResultsCleaned[0] # Deletes empty element at start of list.
+	
+HMMResultsCleaned = [x.split() for x in HMMResultsCleaned]
+	
+# print HMMResultsCleaned
+
