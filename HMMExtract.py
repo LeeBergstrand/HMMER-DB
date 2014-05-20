@@ -45,8 +45,8 @@ def runHMMSearch(FASTA, HMMERDBFile, tempHMMTTabFile):
 	if error:
 		print error
 		sys.exit(1)
-	else:
-		print stdout
+	#else:
+		#print stdout
 #------------------------------------------------------------------------------------------------------------
 # 3: When passed a sequence record object returns an array of fasta strings for each annotation.
 def getProtienAnnotationFasta(seqRecord):
@@ -105,13 +105,13 @@ except IOError:
 print ">> Extracting Protein Annotations..."
 AnnotationFASTADict = getProtienAnnotationFasta(record) # Creates a dictionary containing all protein annotations in the gbk file.
 FASTAString = "".join(AnnotationFASTADict.values()) # Saves these annotations to a string.
-
+open("Blam.faa", "w").write(FASTAString)
 runHMMSearch(FASTAString, HMMFile, tempHMMTTabFile) # Runs hmmer and writes to temporary file.
 
 HMMResults = tempHMMTTabFile.read()
-print HMMResults
+#print HMMResults
 HMMResults = HMMResults.split("Domain scores")[1] # Extracts domain scores.
-print HMMResults
+#print HMMResults
 HMMResults = HMMResults.splitlines()
 
 HMMResultsCleaned = []
