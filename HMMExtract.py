@@ -16,9 +16,7 @@
 import sys
 import subprocess
 import sqlite3
-import tempfile
 import cStringIO
-import re
 from os import path
 from Bio import SeqIO
 from Bio import SearchIO  
@@ -39,9 +37,9 @@ def argsCheck(numArgs):
 		sys.exit(1) # Aborts program. (exit(1) indicates that an error occurred)
 #------------------------------------------------------------------------------------------------------------
 # 2: Runs HMMER with settings specific for extracting subject sequences.
-def runHMMSearch(FASTA, HMMERDBFile, tempHMMTTabFile):
+def runHMMSearch(FASTA, HMMERDBFile):
 	Found16S = True
-	process = subprocess.Popen(["hmmsearch", "--acc", "--cpu", str(processors), "--pfamtblout", tempHMMTTabFile.name, HMMERDBFile, "-"], stdin = subprocess.PIPE, stdout = subprocess.PIPE, bufsize = 1)
+	process = subprocess.Popen(["hmmsearch", "--acc", "--cpu", str(processors), HMMERDBFile, "-"], stdin = subprocess.PIPE, stdout = subprocess.PIPE, bufsize = 1)
 	stdout, error = process.communicate(FASTA) # This returns a list with both stderr and stdout. Only want stdout which is first element.
 	if error:
 		print error
@@ -67,6 +65,42 @@ def getProtienAnnotationFasta(seqRecord):
 			translated_protein = str(featQualifers.get('translation','no_translation')).strip('\'[]')
 			fasta[protein_id] = (">" + protein_id + " " + gene + "-" + product + "\n" + translated_protein + "\n")
 	return fasta
+#------------------------------------------------------------------------------------------------------------
+# 4: Parses HMM searches text output and generates a two dementional array of the domain alignments results.
+def parseHmmsearchResults(HMMResults):
+	HMMResults = HMMResults.split(">>") # Splits output at domain alignments.
+	del HMMResults[0] # Deletes stuff at top of text out put which would be the first element after the split.
+	HMMResults = [x.split("Alignments")[0] for x in HMMResults] # Removes text below 
+	HMMResultsCleaned = []
+	for proteinResult in HMMResults:
+		proteinResult = proteinResult.splitlines()
+		# Deletes empty rows at the end results
+		del proteinResult[-1]
+		del proteinResult[-1]
+
+		del proteinResult[1] # Deletes column names.
+		del proteinResult[1] # Deletes ---------------------- row.
+			
+		TargetProtein = proteinResult[0].split()[0] # Records protein accession
+		del proteinResult[0] # Deletes protein name row
+		
+		for row in proteinResult:
+			row = row.split()
+			print TargetProtein
+			print row
+			score   = row[2]
+			print score
+			evalue  = row[5]
+			print evalue
+			hmmfrom = row[6]
+			print hmmfrom
+			hmmto   = row[7]
+			print hmmto
+			alifrom = row[9]
+			print alifrom
+			alito   = row[10]
+			print alito
+			print
 #===========================================================================================================
 # Main program code:
 	
@@ -80,11 +114,6 @@ HMMFile      = sys.argv[2]
 sqlFile      = sys.argv[3]
 
 HMMName = path.split(HMMFile)[1].rstrip(".hmm")
-
-dirname, basename = path.split(OrganismFile)
-basename = basename.rstrip(".gbk")
-
-tempHMMTTabFile = tempfile.NamedTemporaryFile(prefix = basename, dir = dirname, suffix = ".hmmer") # Creates temporary for hmmer to write to.
 
 # File extension checks
 print ">> Performing file extention checks..."
@@ -108,56 +137,7 @@ except IOError:
 print ">> Extracting Protein Annotations..."
 AnnotationFASTADict = getProtienAnnotationFasta(record) # Creates a dictionary containing all protein annotations in the gbk file.
 FASTAString = "".join(AnnotationFASTADict.values()) # Saves these annotations to a string.
-open("Blam.faa", "w").write(FASTAString)
 
-HMMResults = runHMMSearch(FASTAString, HMMFile, tempHMMTTabFile) # Runs hmmer and writes to temporary file.
-print HMMResults
-HMMResults = HMMResults.split(">>") # Splits output at domain alignments.
-del HMMResults[0] # Deletes stuff at top of text out put which would be the first element after the split.
-HMMResults = [x.split("Alignments")[0] for x in HMMResults] # Removes text below 
-HMMResultsCleaned = []
-for proteinResult in HMMResults:
-	proteinResult = proteinResult.splitlines()
-	# Deletes empty rows at the end results
-	del proteinResult[-1]
-	del proteinResult[-1]
+HMMResults = runHMMSearch(FASTAString, HMMFile) # Runs hmmer and writes to temporary file.
 
-	del proteinResult[1] # Deletes column names.
-	del proteinResult[1] # Deletes ---------------------- row.
-		
-	TargetProtein = proteinResult[0].split()[0] # Records protein accession
-	del proteinResult[0] # Deletes protein name row
-	
-	for row in proteinResult:
-		row = row.split()
-		print TargetProtein
-		print row
-		score   = row[2]
-		print score
-		evalue  = row[5]
-		print evalue
-		hmmfrom = row[6]
-		print hmmfrom
-		hmmto   = row[7]
-		print hmmto
-		alifrom = row[9]
-		print alifrom
-		alito   = row[10]
-		print alito
-		print
-
-'''
-HMMResults = tempHMMTTabFile.read()
-HMMResults = HMMResults.split("Domain scores")[1] # Extracts domain scores.
-HMMResults = HMMResults.splitlines()
-
-HMMResultsCleaned = []
-for i in HMMResults:
-	if "#" not in i:
-		HMMResultsCleaned.append(i)
-del HMMResultsCleaned[0] # Deletes empty element at start of list.
-	
-HMMResultsCleaned = [x.split() for x in HMMResultsCleaned]
-	
-# print HMMResultsCleaned
-'''
+parseHmmsearchResults(HMMResults)
