@@ -130,10 +130,21 @@ for proteinResult in HMMResults:
 	
 	for row in proteinResult:
 		row = row.split()
+		print TargetProtein
 		print row
-		score = row[2]
+		score   = row[2]
 		print score
-		
+		evalue  = row[5]
+		print evalue
+		hmmfrom = row[6]
+		print hmmfrom
+		hmmto   = row[7]
+		print hmmto
+		alifrom = row[9]
+		print alifrom
+		alito   = row[10]
+		print alito
+		print
 
 '''
 HMMResults = tempHMMTTabFile.read()
