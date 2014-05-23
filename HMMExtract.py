@@ -17,6 +17,7 @@ import sys
 import subprocess
 import sqlite3
 import cStringIO
+import re
 from os import path
 from Bio import SeqIO
 from Bio import SearchIO  
@@ -68,39 +69,34 @@ def getProtienAnnotationFasta(seqRecord):
 #------------------------------------------------------------------------------------------------------------
 # 4: Parses HMM searches text output and generates a two dementional array of the domain alignments results.
 def parseHmmsearchResults(HMMResults):
+	HitRowRex = re.compile("^\s*\d\s*((\?)|(\!))\s*")
 	HMMResults = HMMResults.split(">>") # Splits output at domain alignments.
-	del HMMResults[0] # Deletes stuff at top of text out put which would be the first element after the split.
-	HMMResults = [x.split("Alignments")[0] for x in HMMResults] # Removes text below 
+	del HMMResults[0] # Deletes stuff at top of text output which would be the first element after the split.
+	HMMResults = [x.split("Alignments")[0] for x in HMMResults] # Removes detailed per alignment info.
 	HMMResultsCleaned = []
 	for proteinResult in HMMResults:
 		proteinResult = proteinResult.splitlines()
-		# Deletes empty rows at the end results
-		del proteinResult[-1]
-		del proteinResult[-1]
-
-		del proteinResult[1] # Deletes column names.
-		del proteinResult[1] # Deletes ---------------------- row.
-			
 		TargetProtein = proteinResult[0].split()[0] # Records protein accession
-		del proteinResult[0] # Deletes protein name row
 		
 		for row in proteinResult:
-			row = row.split()
-			print TargetProtein
-			print row
-			score   = row[2]
-			print score
-			evalue  = row[5]
-			print evalue
-			hmmfrom = row[6]
-			print hmmfrom
-			hmmto   = row[7]
-			print hmmto
-			alifrom = row[9]
-			print alifrom
-			alito   = row[10]
-			print alito
-			print
+			if HitRowRex.match(row):
+				print "TRUE"
+				row = row.split()
+				print TargetProtein
+				print row
+				score   = row[2]
+				print score
+				evalue  = row[5]
+				print evalue
+				hmmfrom = row[6]
+				print hmmfrom
+				hmmto   = row[7]
+				print hmmto
+				alifrom = row[9]
+				print alifrom
+				alito   = row[10]
+				print alito
+				print
 #===========================================================================================================
 # Main program code:
 	
@@ -139,5 +135,4 @@ AnnotationFASTADict = getProtienAnnotationFasta(record) # Creates a dictionary c
 FASTAString = "".join(AnnotationFASTADict.values()) # Saves these annotations to a string.
 
 HMMResults = runHMMSearch(FASTAString, HMMFile) # Runs hmmer and writes to temporary file.
-
 parseHmmsearchResults(HMMResults)
