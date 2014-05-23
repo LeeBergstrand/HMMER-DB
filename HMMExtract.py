@@ -19,8 +19,7 @@ import sqlite3
 import cStringIO
 import re
 from os import path
-from Bio import SeqIO
-from Bio import SearchIO  
+from Bio import SeqIO 
 from multiprocessing import cpu_count
 
 processors = cpu_count() # Gets number of processor cores for HMMER.
@@ -40,7 +39,7 @@ def argsCheck(numArgs):
 # 2: Runs HMMER with settings specific for extracting subject sequences.
 def runHMMSearch(FASTA, HMMERDBFile):
 	Found16S = True
-	process = subprocess.Popen(["hmmsearch", "--acc", "--cpu", str(processors), HMMERDBFile, "-"], stdin = subprocess.PIPE, stdout = subprocess.PIPE, bufsize = 1)
+	process = subprocess.Popen(["hmmsearch", "--acc", "--cpu", str(processors), "--domtblout", "BLAM.out" , HMMERDBFile, "-"], stdin = subprocess.PIPE, stdout = subprocess.PIPE, bufsize = 1)
 	stdout, error = process.communicate(FASTA) # This returns a list with both stderr and stdout. Only want stdout which is first element.
 	if error:
 		print error
@@ -68,7 +67,7 @@ def getProtienAnnotationFasta(seqRecord):
 	return fasta
 #------------------------------------------------------------------------------------------------------------
 # 4: Parses HMM searches text output and generates a two dementional array of the domain alignments results.
-def parseHmmsearchResults(HMMResults):
+def parseHmmsearchResults(HMMResults, HMMName, HMMLength):
 	HitRowRex = re.compile("^\s*\d\s*((\?)|(\!))\s*")
 	HMMResults = HMMResults.split(">>") # Splits output at domain alignments.
 	del HMMResults[0] # Deletes stuff at top of text output which would be the first element after the split.
@@ -76,27 +75,40 @@ def parseHmmsearchResults(HMMResults):
 	HMMResultsCleaned = []
 	for proteinResult in HMMResults:
 		proteinResult = proteinResult.splitlines()
-		TargetProtein = proteinResult[0].split()[0] # Records protein accession
-		
+		TargetProtein = proteinResult[0].split()[0] # Records protein accession from first line
 		for row in proteinResult:
-			if HitRowRex.match(row):
-				print "TRUE"
+			if HitRowRex.match(row): # If row is a domain table line.
 				row = row.split()
-				print TargetProtein
-				print row
-				score   = row[2]
-				print score
-				evalue  = row[5]
-				print evalue
-				hmmfrom = row[6]
-				print hmmfrom
-				hmmto   = row[7]
-				print hmmto
-				alifrom = row[9]
-				print alifrom
-				alito   = row[10]
-				print alito
-				print
+				score   = float(row[2])
+				evalue  = float(row[5])
+				hmmfrom = int(row[6])
+				hmmto   = int(row[7])
+				alifrom = int(row[9])
+				alito   = int(row[10])
+				hmmCoverage = ((float((hmmto - hmmfrom)))/float((HMMLength)))
+				DomainRow = [TargetProtein, HMMName, score, evalue, hmmfrom, hmmto, alifrom, alito, hmmCoverage]
+				HMMResultsCleaned.append(DomainRow)
+	return HMMResultsCleaned
+#------------------------------------------------------------------------------------------------------------
+# 6: Fitres HMM Hits.
+def fitreHMMHitTable(HMMHitTable):
+	FiltredHMMHitTable = []
+	for row in HMMHitTable:
+		if row[3] < float("1e-30"):
+			FiltredHMMHitTable.append(row)
+	HMMHitTable = FiltredHMMHitTable
+	FiltredHMMHitTable = []
+	for row in HMMHitTable:
+			if row[3] < float("1e-30"):
+				FiltredHMMHitTable.append(row)
+	
+#------------------------------------------------------------------------------------------------------------
+# 6: Creates list of hits protien FASTAs.
+def getHitProteins(HMMHitTable, AnnotationFASTADict):
+	HitProteins = []
+	for row in HMMHitTable:
+		HitProteins.append(AnnotationFASTADict[row[0]])
+	return HitProteins
 #===========================================================================================================
 # Main program code:
 	
@@ -130,9 +142,29 @@ except IOError:
 	print "Failed to open " + OrganismFile
 	sys.exit(1)
 
+# Gets HMM Length.
+try:
+	HMMLengthRegex = re.compile("^LENG\s*\d*$")
+	print ">> Opening HMM File..."
+	with open(HMMFile, "rU") as inFile:
+		currentLine = inFile.readline()
+		while not HMMLengthRegex.match(currentLine):
+			currentLine = inFile.readline()
+		
+		HMMLength = int(currentLine.split()[1])
+except IOError:
+	print "Failed to open " + HMMFile
+	sys.exit(1)
+	
 print ">> Extracting Protein Annotations..."
 AnnotationFASTADict = getProtienAnnotationFasta(record) # Creates a dictionary containing all protein annotations in the gbk file.
-FASTAString = "".join(AnnotationFASTADict.values()) # Saves these annotations to a string.
+print ">> Extracting Organism Info..."
+OrganismInfo = [record.annotations['source'], record.annotations['taxonomy'][0], record.annotations['taxonomy']]
 
-HMMResults = runHMMSearch(FASTAString, HMMFile) # Runs hmmer and writes to temporary file.
-parseHmmsearchResults(HMMResults)
+FASTAString = "".join(AnnotationFASTADict.values()) # Saves these annotations to a string.
+HMMResults = runHMMSearch(FASTAString, HMMFile) # Runs hmmsearch.
+
+HMMHitTable = parseHmmsearchResults(HMMResults, HMMName, HMMLength) # Parses hmmsearch results into a two dimensional array.
+fitreHMMHitTable(HMMHitTable)
+
+HitProtienFASTAs = getHitProtiens(HMMHitTable, AnnotationFASTADict) # Gets hit protein FASTAs.
