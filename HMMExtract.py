@@ -22,6 +22,8 @@ from os import path
 from Bio import SeqIO 
 from multiprocessing import cpu_count
 
+import time
+
 processors = cpu_count() # Gets number of processor cores for HMMER.
 
 #===========================================================================================================
@@ -39,7 +41,7 @@ def argsCheck(numArgs):
 # 2: Runs HMMER with settings specific for extracting subject sequences.
 def runHMMSearch(FASTA, HMMERDBFile):
 	Found16S = True
-	process = subprocess.Popen(["hmmsearch", "--acc", "--cpu", str(processors), "--domtblout", "BLAM.out" , HMMERDBFile, "-"], stdin = subprocess.PIPE, stdout = subprocess.PIPE, bufsize = 1)
+	process = subprocess.Popen(["hmmsearch", "--acc", "--cpu", str(processors), HMMERDBFile, "-"], stdin = subprocess.PIPE, stdout = subprocess.PIPE, bufsize = 1)
 	stdout, error = process.communicate(FASTA) # This returns a list with both stderr and stdout. Only want stdout which is first element.
 	if error:
 		print error
@@ -92,16 +94,9 @@ def parseHmmsearchResults(HMMResults, HMMName, HMMLength):
 #------------------------------------------------------------------------------------------------------------
 # 6: Fitres HMM Hits.
 def fitreHMMHitTable(HMMHitTable):
-	FiltredHMMHitTable = []
-	for row in HMMHitTable:
-		if row[3] < float("1e-30"):
-			FiltredHMMHitTable.append(row)
-	HMMHitTable = FiltredHMMHitTable
-	FiltredHMMHitTable = []
-	for row in HMMHitTable:
-			if row[3] < float("1e-30"):
-				FiltredHMMHitTable.append(row)
-	
+	HMMHitTable[:] = [row for row in HMMHitTable if row[3] < float("1e-30")] # Filtres by E-value.
+	HMMHitTable[:] = [row for row in HMMHitTable if row[-1] > 0.3] # Filtres by Query Coverage.
+	return	HMMHitTable		
 #------------------------------------------------------------------------------------------------------------
 # 6: Creates list of hits protien FASTAs.
 def getHitProteins(HMMHitTable, AnnotationFASTADict):
@@ -165,6 +160,6 @@ FASTAString = "".join(AnnotationFASTADict.values()) # Saves these annotations to
 HMMResults = runHMMSearch(FASTAString, HMMFile) # Runs hmmsearch.
 
 HMMHitTable = parseHmmsearchResults(HMMResults, HMMName, HMMLength) # Parses hmmsearch results into a two dimensional array.
-fitreHMMHitTable(HMMHitTable)
+HMMHitTable = fitreHMMHitTable(HMMHitTable)
 
-HitProtienFASTAs = getHitProtiens(HMMHitTable, AnnotationFASTADict) # Gets hit protein FASTAs.
+HitProtienFASTAs = getHitProteins(HMMHitTable, AnnotationFASTADict) # Gets hit protein FASTAs.
