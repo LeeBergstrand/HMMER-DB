@@ -67,7 +67,7 @@ if not OrganismFile.endswith(".gbk"):
 
 # Read in genbank file as a sequence record object.
 try:
-	print ">> Opening Genbank File..."
+	print ">> Opening " + OrganismFile
 	handle = open(OrganismFile, "rU")
 	record = SeqIO.read(handle, "genbank")
 	handle.close()
