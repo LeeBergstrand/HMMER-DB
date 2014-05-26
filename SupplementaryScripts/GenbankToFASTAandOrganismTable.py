@@ -38,7 +38,8 @@ def getProtienAnnotationFasta(seqRecord):
 			featQualifers = feature.qualifiers # Each feature contains a dictionary called quailifiers which contains           
 			                                   # data about the sequence feature (for example the translation)
 			
-			# Gets the required qualifers. Uses featQualifers.get to return the quatifer or a default value if the quatifer			# is not found. Calls strip to remove unwanted brackets and ' from quantifer before storing it as a string.
+			# Gets the required qualifers. Uses featQualifers.get to return the quatifer or a default value if the quatifer
+			# is not found. Calls strip to remove unwanted brackets and ' from quantifer before storing it as a string.
 			protein_id = str(featQualifers.get('protein_id','no_protein_id')).strip('\'[]')
 			if protein_id == 'no_protein_id':
 				continue # Skips the iteration if protien has no id.
