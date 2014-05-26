@@ -72,8 +72,9 @@ try:
 	try:
 		record = SeqIO.read(handle, "genbank")
 	except ValueError as error:
-		print error
 		print "Error has occured while parsing " + OrganismFile + "!"
+		print error
+		print error.traceback
 		sys.exit(1)
 	handle.close()
 except IOError:
