@@ -90,7 +90,11 @@ def parseHmmsearchResults(HMMResults, HMMName, HMMLength):
 #------------------------------------------------------------------------------------------------------------
 # 6: Fitres HMM Hits.
 def fitreHMMHitTable(HMMHitTable):
-	HMMHitTable[:] = [row for row in HMMHitTable if row[3] < float("1e-30")] # Filtres by E-value.
+	
+	for i in HMMHitTable:
+		print i 
+	print "======================================================================================"
+	#HMMHitTable[:] = [row for row in HMMHitTable if row[3] < float("1e-30")] # Filtres by E-value.
 	
 	FiltredHMMHitTable = list(HMMHitTable)
 	for i in range(0,(len(HMMHitTable)-1)):
@@ -100,20 +104,32 @@ def fitreHMMHitTable(HMMHitTable):
 			AlignmentOneLength = RowOne[-2] - RowOne[-3] # RowOne AliTo - AliFrom
 			AlignmentTwoLength = RowTwo[-2] - RowTwo[-3] # RowTwo AliTo - AliFrom
 			Overlap = RowOne[-2] - RowTwo[-3]  # RowOne AliTo -  RowTwo AliFrom
-			print Overlap
+			
 			if (Overlap > 0): # If there is overlap
-				print "Overlap"
+				print "There is Overlap: ", Overlap
+				print RowOne
+				print RowTwo
 				# If the overlap is greater than 50% of either alignment.
-				if((((float(Overlap)/float(AlignmentOneLength)) > 0.5) or ((float(Overlap)/float(AlignmentOneLength)) > 0.5))): 
-					print "Is greater than 50"
-					HMMHitTable.remove(RowOne) # The alignment with the lower evalue will allways be in the second row since 
-											    # HMMSearch always formats the output with multiple domains highest to lowest E-value.
+				if((((float(Overlap)/float(AlignmentOneLength)) > 0.5) or ((float(Overlap)/float(AlignmentTwoLength)) > 0.5))): 
+					print "Overlap is greater than 50% of an alignemnt."
+					print float(Overlap)/float(AlignmentOneLength)
+					print float(Overlap)/float(AlignmentTwoLength)
+					HMMHitTable.remove(RowOne)
+					print "Deleting: ", RowOne
+					i = i - 1
 				else:
-					print "Is greater than 50"
+					print "Overlap is less than 50% of an alignemnt."
 			else:
 				print "No Overlap"
+				print RowOne
+				print RowTwo
+			print "------------------------------------------------------------------------------"
 	
-	HMMHitTable[:] = [row for row in HMMHitTable if row[-1] > 0.3] # Filtres by Query Coverage.
+	#HMMHitTable[:] = [row for row in HMMHitTable if row[-1] > 0.3] # Filtres by Query Coverage.
+	print "======================================================================================"
+	for i in HMMHitTable:
+		print i 
+		
 	return	HMMHitTable		
 #------------------------------------------------------------------------------------------------------------
 # 6: Creates list of hits protien FASTAs.
@@ -159,7 +175,7 @@ except IOError:
 	print "Failed to open " + OrganismFile
 	sys.exit(1)
 	
-# Opens CSV file for reading.
+# Opens OrganismDB CSV file for reading and stores as hash table.
 OrganimHash = {}
 try:
 	print ">> Opening CSV File: " + PhyloCSVFile
@@ -195,25 +211,8 @@ OrganismInfo = OrganimHash[OrganismName]
 
 FASTAString = "".join(AnnotationFASTADict.values()) # Saves these annotations to a string.
 HMMResults  = runHMMSearch(FASTAString, HMMFile) # Runs hmmsearch.
+
 HMMHitTable = parseHmmsearchResults(HMMResults, HMMName, HMMLength) # Parses hmmsearch results into a two dimensional array.
-
-#HMMHitTable = [['YP_705149.1', 'Cyp125(GramPos)', 1.3, 42.0, 99, 132, 104, 137, 0.08088235294117647]]
-#HMMHitTable.append(['YP_705149.1', 'Cyp125(GramPos)', 30.4, 5.9e-08, 214, 376, 230, 420, 0.39705882352941174])
-
-#HMMHitTable.append(['YP_703037.1', 'Cyp125(GramPos)', 2.7, 16.0, 100, 130, 107, 236, 0.07352941176470588])
-#HMMHitTable.append(['YP_703037.1', 'Cyp125(GramPos)', 11.5, 0.035, 213, 275, 231, 293, 0.15196078431372548])
-#HMMHitTable.append(['YP_703037.1', 'Cyp125(GramPos)', 18.1, 0.00034, 286, 376, 323, 422, 0.22058823529411764])
-
-#HMMHitTable.append(['YP_704615.1', 'Cyp125(GramPos)', 6.1, 1.4, 198, 273, 196, 278, 0.18382352941176472])
-#HMMHitTable.append(['YP_704615.1', 'Cyp125(GramPos)', 26.7, 7.9e-07, 283, 377, 308, 411, 0.23039215686274508])
-
-#HMMHitTable.append(['YP_704571.1', 'Cyp125(GramPos)', -3.4, 1100.0, 104, 148, 136, 180, 0.10784313725490197])
-#HMMHitTable.append(['YP_704571.1', 'Cyp125(GramPos)', 14.5, 0.0041, 213, 377, 270, 464, 0.4019607843137255])
-
-
-
-#for i in HMMHitTable:
-#	print i 
-#HMMHitTable = fitreHMMHitTable(HMMHitTable)
+HMMHitTable = fitreHMMHitTable(HMMHitTable) # Filtres down hmm results.
 
 HitProtienFASTAs = getHitProteins(HMMHitTable, AnnotationFASTADict) # Gets hit protein FASTAs.
