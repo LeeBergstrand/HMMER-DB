@@ -69,7 +69,12 @@ if not OrganismFile.endswith(".gbk"):
 try:
 	print ">> Opening " + OrganismFile
 	handle = open(OrganismFile, "rU")
-	record = SeqIO.read(handle, "genbank")
+	try:
+		record = SeqIO.read(handle, "genbank")
+	except ValueError as error:
+		print error
+		print "Error has occured while parsing " + OrganismFile + "!"
+		sys.exit(1)
 	handle.close()
 except IOError:
 	print "Failed to open " + OrganismFile
