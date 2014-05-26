@@ -79,7 +79,7 @@ print ">> Extracting Protein Annotations..."
 FASTA = getProtienAnnotationFasta(record) # Creates a dictionary containing all protein annotations in the gbk file.
 
 print ">> Extracting Organism Info..."
-OrganismString = OrganismID + "," + record.annotations['source'] + "," + record.annotations['taxonomy'][0] + "," + "_".join(record.annotations['taxonomy']) + "\n"
+OrganismString = OrganismID + "," + record.description.replace(",", "_") + "," + "_".join(record.annotations['taxonomy']) + "\n"
 
 # Write annotations to FASTA file.
 try:
