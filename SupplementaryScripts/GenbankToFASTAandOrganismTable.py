@@ -1,4 +1,4 @@
-#!/usr/bin/env python 
+#!/usr/bin/env pypy 
 # Created by: Lee Bergstrand 
 # Descript: A program that extracts the protiens annotations from a genbank file and as well as some 
 #			information about the organism in the file. Stores the protein annotations as a Fasta. 
@@ -6,8 +6,8 @@
 #
 # Requirements: - This script requires the Biopython module: http://biopython.org/wiki/Download
 #
-# Usage: HMMExtract.py <organism.gbk> <Organisms.csv>
-# Example: HMMExtract.py ecoli.gbk logEaters.csv
+# Usage: GenbankToFASTAandOrganismTable.py <organism.gbk> 
+# Example: GenbankToFASTAandOrganismTable.py ecoli.gbk
 #----------------------------------------------------------------------------------------
 #===========================================================================================================
 #Imports & Setup:
@@ -46,19 +46,19 @@ def getProtienAnnotationFasta(seqRecord):
 			product = str(featQualifers.get('product','no_product_name')).strip('\'[]')
 			translated_protein = str(featQualifers.get('translation','no_translation')).strip('\'[]')
 			fasta.append(">" + protein_id + " " + gene + "-" + product + "\n" + translated_protein + "\n")
-	FASTAString = "\n".join(fasta)
+	FASTAString = "".join(fasta)
 	return FASTAString
 #------------------------------------------------------------------------------------------------------------
 # Main program code:
 
 # House keeping...
-argsCheck(3) # Checks if the number of arguments are correct.
+argsCheck(2) # Checks if the number of arguments are correct.
 
 # Stores file one for input checking.
 print ">> Starting up..."
 OrganismFile = sys.argv[1]
-CSVFile = sys.argv[2]
-FastaFile = path.split(OrganismFile)[1].rstrip(".gbk") + ".faa"
+OrganismID = path.split(OrganismFile)[1].rstrip(".gbk")
+FastaFile = OrganismID + ".faa"
 
 # File extension checks
 print ">> Performing file extention checks..."
@@ -79,7 +79,7 @@ print ">> Extracting Protein Annotations..."
 FASTA = getProtienAnnotationFasta(record) # Creates a dictionary containing all protein annotations in the gbk file.
 
 print ">> Extracting Organism Info..."
-OrganismString = record.annotations['source'] + "," + record.annotations['taxonomy'][0] + "," + "_".join(record.annotations['taxonomy']) + "\n"
+OrganismString = OrganismID + "," + record.annotations['source'] + "," + record.annotations['taxonomy'][0] + "," + "_".join(record.annotations['taxonomy']) + "\n"
 
 # Write annotations to FASTA file.
 try:
@@ -94,10 +94,10 @@ except IOError:
 # Write annotations to FASTA.	
 try:
 	print ">> Writing to organism info to CSV file..."
-	FASTAWriter = open(CSVFile, "a")
+	FASTAWriter = open("OrganismDB.csv", "a")
 	FASTAWriter.write(OrganismString)
 	FASTAWriter.close()
 except IOError:
 	print "Failed to open " + CSVFile
 	sys.exit(1)
-	print ">> Done"
+print ">> Done"
