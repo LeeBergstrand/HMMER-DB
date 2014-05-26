@@ -112,9 +112,9 @@ def fitreHMMHitTable(HMMHitTable):
 		return FiltredHMMHitTable
 	#------------------------------------------------------------------------------------------------------------
 
-	HMMHitTable = [row for row in HMMHitTable if row[3] < float("1e-30")] # Filtres by E-value.
-	HMMHitTable = filtreHMMHitTableByOverLap(HMMHitTable)
-	HMMHitTable = [row for row in HMMHitTable if row[-1] > 0.3] # Filtres by Query Coverage.
+	#HMMHitTable = [row for row in HMMHitTable if row[3] < float("1e-30")] # Filtres by E-value.
+	#HMMHitTable = filtreHMMHitTableByOverLap(HMMHitTable)
+	#HMMHitTable = [row for row in HMMHitTable if row[-1] > 0.3] # Filtres by Query Coverage.
 
 	return	HMMHitTable		
 #------------------------------------------------------------------------------------------------------------
@@ -201,4 +201,13 @@ HMMResults  = runHMMSearch(FASTAString, HMMFile) # Runs hmmsearch.
 HMMHitTable = parseHmmsearchResults(HMMResults, HMMName, HMMLength) # Parses hmmsearch results into a two dimensional array.
 HMMHitTable = fitreHMMHitTable(HMMHitTable)
 
-HitProtienFASTAs = getHitProteins(HMMHitTable, AnnotationFASTADict) # Gets hit protein FASTAs.
+HitProteinFASTAs = getHitProteins(HMMHitTable, AnnotationFASTADict) # Gets hit protein FASTAs.
+
+print
+print OrganismInfo
+print
+for hit in HMMHitTable:
+	print hit
+print
+for Protein in HitProteinFASTAs:
+	print Protein
