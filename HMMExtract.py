@@ -16,7 +16,6 @@
 import sys
 import subprocess
 import sqlite3
-import cStringIO
 import csv
 import re
 from os import path
@@ -137,6 +136,7 @@ HMMFile      = sys.argv[3]
 sqlFile      = sys.argv[4]
 
 HMMName = path.split(HMMFile)[1].rstrip(".hmm")
+OrganismName = path.split(OrganismFile)[1].rstrip(".faa")
 
 # File extension checks
 print ">> Performing file extention checks..."
@@ -151,7 +151,7 @@ if not sqlFile.endswith(".sqlite"):
 
 # Read in genbank file as a sequence record object.
 try:
-	print ">> Opening FASTA File..."
+	print ">> Opening FASTA File: " + OrganismFile
 	handle = open(OrganismFile, "rU")
 	records = SeqIO.parse(handle, "fasta")
 	handle.close()
@@ -160,12 +160,14 @@ except IOError:
 	sys.exit(1)
 	
 # Opens CSV file for reading.
+OrganimHash = {}
 try:
 	print ">> Opening CSV File: " + PhyloCSVFile
 	readFile = open(PhyloCSVFile, "r")
-	reader  = csv.reader(readFile) # opens file with csv module which takes into account verying csv formats and parses correctly.
-	print type(reader)
+	reader  = csv.reader(readFile) # Opens file with csv module which takes into account verying csv formats and parses correctly.
 	print ">> Good CSV file."
+	for row in reader:
+		OrganimHash[row[0]] = row
 	readFile.close()
 except IOError:
 	print "Failed to open " + PhyloCSVFile
@@ -174,7 +176,7 @@ except IOError:
 # Gets HMM Length.
 try:
 	HMMLengthRegex = re.compile("^LENG\s*\d*$")
-	print ">> Opening HMM File..."
+	print ">> Opening HMM File: " + HMMFile
 	with open(HMMFile, "rU") as inFile:
 		currentLine = inFile.readline()
 		while not HMMLengthRegex.match(currentLine):
@@ -187,16 +189,13 @@ except IOError:
 	
 print ">> Extracting Protein Annotations..."
 AnnotationFASTADict = createProteomeHash(OrganismFile) # Creates a dictionary containing all protein annotations in the gbk file.
+
 print ">> Extracting Organism Info..."
+OrganismInfo = OrganimHash[OrganismName]
 
-#OrganismInfo = [record.annotations['source'], record.annotations['taxonomy'][0], record.annotations['taxonomy']]
-
-
-#FASTAString = "".join(AnnotationFASTADict.values()) # Saves these annotations to a string.
-
-#HMMResults = runHMMSearch(FASTAString, HMMFile) # Runs hmmsearch.
-
-#HMMHitTable = parseHmmsearchResults(HMMResults, HMMName, HMMLength) # Parses hmmsearch results into a two dimensional array.
+FASTAString = "".join(AnnotationFASTADict.values()) # Saves these annotations to a string.
+HMMResults  = runHMMSearch(FASTAString, HMMFile) # Runs hmmsearch.
+HMMHitTable = parseHmmsearchResults(HMMResults, HMMName, HMMLength) # Parses hmmsearch results into a two dimensional array.
 
 #HMMHitTable = [['YP_705149.1', 'Cyp125(GramPos)', 1.3, 42.0, 99, 132, 104, 137, 0.08088235294117647]]
 #HMMHitTable.append(['YP_705149.1', 'Cyp125(GramPos)', 30.4, 5.9e-08, 214, 376, 230, 420, 0.39705882352941174])
@@ -217,4 +216,4 @@ print ">> Extracting Organism Info..."
 #	print i 
 #HMMHitTable = fitreHMMHitTable(HMMHitTable)
 
-# HitProtienFASTAs = getHitProteins(HMMHitTable, AnnotationFASTADict) # Gets hit protein FASTAs.
+HitProtienFASTAs = getHitProteins(HMMHitTable, AnnotationFASTADict) # Gets hit protein FASTAs.
