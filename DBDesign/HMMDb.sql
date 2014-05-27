@@ -8,7 +8,7 @@
  Target Server Version : 3008004
  File Encoding         : utf-8
 
- Date: 05/27/2014 12:57:19 PM
+ Date: 05/27/2014 13:29:53 PM
 */
 
 PRAGMA foreign_keys = false;
@@ -53,6 +53,7 @@ CREATE TABLE "Proteins" (
 	 "Locus" text(25,0) NOT NULL,
 	 "Start" integer(300,0) NOT NULL,
 	 "End" integer(300,0) NOT NULL,
+	 "Strand" integer(1,0) NOT NULL,
 	 "FASTA_Sequence" text(5500,0) NOT NULL,
 	PRIMARY KEY("Protein_Accession"),
 	CONSTRAINT "fk_Protein_To_Hits" FOREIGN KEY ("Protein_Accession") REFERENCES "HMM_Hits" ("Protein_Accession"),
