@@ -22,7 +22,7 @@ from os import path
 from Bio import SeqIO 
 from multiprocessing import cpu_count
 
-import time
+import time # Dev. Import
 
 processors = cpu_count() # Gets number of processor cores for HMMER.
 
@@ -89,11 +89,11 @@ def parseHmmsearchResults(HMMResults, HMMName, HMMLength):
 	return HMMResultsCleaned
 #------------------------------------------------------------------------------------------------------------
 # 6: Fitres HMM Hits.
-def fitreHMMHitTable(HMMHitTable):
+def filterHMMHitTable(HMMHitTable):
 	#------------------------------------------------------------------------------------------------------------
 	# 6a: This code eliminates hits to the same protien that overlap by greater than 50% by selecting the one with the greater E-value.
 	# Note: this code assumes that HMMsearch output domains to the same protein are ordered by hightest to lowest E-value.
-	def filtreHMMHitTableByOverLap(HMMHitTable):
+	def filterHMMHitTableByOverLap(HMMHitTable):
 		FiltredHMMHitTable = list(HMMHitTable)
 		for i in range(0,(len(HMMHitTable)-1)):
 			RowOne = HMMHitTable[i]    # Current Row in hit table.
@@ -113,7 +113,7 @@ def fitreHMMHitTable(HMMHitTable):
 	#------------------------------------------------------------------------------------------------------------
 
 	HMMHitTable = [row for row in HMMHitTable if row[3] < float("1e-30")] # Filtres by E-value.
-	HMMHitTable = filtreHMMHitTableByOverLap(HMMHitTable)
+	HMMHitTable = filterHMMHitTableByOverLap(HMMHitTable)
 	HMMHitTable = [row for row in HMMHitTable if row[-1] > 0.3] # Filtres by Query Coverage.
 
 	return	HMMHitTable		
@@ -162,7 +162,7 @@ except IOError:
 	sys.exit(1)
 	
 # Opens OrganismDB CSV file for reading and stores as hash table.
-OrganimHash = {}
+OrganismHash = {}
 try:
 	print ">> Opening CSV File: " + PhyloCSVFile
 	readFile = open(PhyloCSVFile, "r")
@@ -193,13 +193,13 @@ print ">> Extracting Protein Annotations..."
 AnnotationFASTADict = createProteomeHash(OrganismFile) # Creates a dictionary containing all protein annotations in the gbk file.
 
 print ">> Extracting Organism Info..."
-OrganismInfo = OrganimHash[OrganismName]
+OrganismInfo = OrganismHash[OrganismName]
 
 FASTAString = "".join(AnnotationFASTADict.values()) # Saves these annotations to a string.
 HMMResults  = runHMMSearch(FASTAString, HMMFile) # Runs hmmsearch.
 
 HMMHitTable = parseHmmsearchResults(HMMResults, HMMName, HMMLength) # Parses hmmsearch results into a two dimensional array.
-HMMHitTable = fitreHMMHitTable(HMMHitTable)
+HMMHitTable = filterHMMHitTable(HMMHitTable)
 
 HitProteinFASTAs = getHitProteins(HMMHitTable, AnnotationFASTADict) # Gets hit protein FASTAs.
 
