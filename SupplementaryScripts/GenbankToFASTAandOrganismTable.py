@@ -88,7 +88,7 @@ FASTA = getProtienAnnotationFasta(record) # Creates a dictionary containing all 
 
 
 print ">> Extracting Organism Info..."
-OrganismString = OrganismID + "," + record.description.replace(",", "") + "," + record.annotations['source'] + "," + "_".join(record.annotations['taxonomy']) + "\n"
+OrganismString = OrganismID + "," + record.description.replace(",", "") + "," + record.annotations['source'].replace(",", "") + "," + "_".join(record.annotations['taxonomy']) + "\n"
 
 # Write annotations to FASTA file.
 try:
