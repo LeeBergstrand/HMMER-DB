@@ -112,9 +112,9 @@ def fitreHMMHitTable(HMMHitTable):
 		return FiltredHMMHitTable
 	#------------------------------------------------------------------------------------------------------------
 
-	#HMMHitTable = [row for row in HMMHitTable if row[3] < float("1e-30")] # Filtres by E-value.
-	#HMMHitTable = filtreHMMHitTableByOverLap(HMMHitTable)
-	#HMMHitTable = [row for row in HMMHitTable if row[-1] > 0.3] # Filtres by Query Coverage.
+	HMMHitTable = [row for row in HMMHitTable if row[3] < float("1e-30")] # Filtres by E-value.
+	HMMHitTable = filtreHMMHitTableByOverLap(HMMHitTable)
+	HMMHitTable = [row for row in HMMHitTable if row[-1] > 0.3] # Filtres by Query Coverage.
 
 	return	HMMHitTable		
 #------------------------------------------------------------------------------------------------------------

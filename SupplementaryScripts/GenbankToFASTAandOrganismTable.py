@@ -37,16 +37,17 @@ def getProtienAnnotationFasta(seqRecord):
 		if feature.type == "CDS": # CDS means coding sequence (These are the only feature we're interested in)
 			featQualifers = feature.qualifiers # Each feature contains a dictionary called quailifiers which contains           
 			                                   # data about the sequence feature (for example the translation)
-			
+			location = str(feature.location)
 			# Gets the required qualifers. Uses featQualifers.get to return the quatifer or a default value if the quatifer
 			# is not found. Calls strip to remove unwanted brackets and ' from quantifer before storing it as a string.
 			protein_id = str(featQualifers.get('protein_id','no_protein_id')).strip('\'[]')
 			if protein_id == 'no_protein_id':
 				continue # Skips the iteration if protien has no id.
+			protein_locus = str(featQualifers.get('locus_tag','no_locus_tag')).strip('\'[]')
 			gene    = str(featQualifers.get('gene','no_gene_name')).strip('\'[]')
 			product = str(featQualifers.get('product','no_product_name')).strip('\'[]')
 			translated_protein = str(featQualifers.get('translation','no_translation')).strip('\'[]')
-			fasta.append(">" + protein_id + " " + gene + "-" + product + "\n" + translated_protein + "\n")
+			fasta.append(">" + protein_id + " " + gene + "-" + product + " (Locus: " + protein_locus + ")" + " (Location: " + location + ")" + "\n" + translated_protein + "\n")
 	FASTAString = "".join(fasta)
 	return FASTAString
 #------------------------------------------------------------------------------------------------------------
@@ -85,8 +86,9 @@ except IOError:
 print ">> Extracting Protein Annotations..."
 FASTA = getProtienAnnotationFasta(record) # Creates a dictionary containing all protein annotations in the gbk file.
 
+
 print ">> Extracting Organism Info..."
-OrganismString = OrganismID + "," + record.description.replace(",", "_") + "," + "_".join(record.annotations['taxonomy']) + "\n"
+OrganismString = OrganismID + "," + record.description.replace(",", "") + "," + record.annotations['source'] + "," + "_".join(record.annotations['taxonomy']) + "\n"
 
 # Write annotations to FASTA file.
 try:
