@@ -122,7 +122,7 @@ def filterHMMHitTable(HMMHitTable):
 	return	HMMHitTable		
 #------------------------------------------------------------------------------------------------------------
 # 6: Creates list of hits protien FASTAs.
-def getHitProteins(HMMHitTable, AnnotationFASTADict):
+def getHitProteins(HMMHitTable, AnnotationFASTADict, OrganismName):
 	HitProteins = []
 	for row in HMMHitTable:
 		ProteinAccession = row[0]
@@ -135,7 +135,7 @@ def getHitProteins(HMMHitTable, AnnotationFASTADict):
 		Start  = LocationData.group(1)
 		End    = LocationData.group(2)
 		Strand = LocationData.group(3)
-		ProteinData = [ProteinAccession, Locus, Start, End, Strand, ProteinFASTA]
+		ProteinData = [ProteinAccession, OrganismName, Locus, Start, End, Strand, ProteinFASTA]
 		HitProteins.append(ProteinData)
 	return HitProteins
 #===========================================================================================================
@@ -209,21 +209,34 @@ AnnotationFASTADict = createProteomeHash(OrganismFile) # Creates a dictionary co
 print ">> Extracting Organism Info..."
 OrganismInfo = OrganismHash[OrganismName]
 
+print ">> Running Hmmsearch..."
 FASTAString = "".join(AnnotationFASTADict.values()) # Saves these annotations to a string.
 HMMResults  = runHMMSearch(FASTAString, HMMFile) # Runs hmmsearch.
 
+print ">> Parsing and filtering hmmsearch results..."
 HMMHitTable = parseHmmsearchResults(HMMResults, HMMName, HMMLength) # Parses hmmsearch results into a two dimensional array.
 HMMHitTable = filterHMMHitTable(HMMHitTable)
-
-HitProteins = getHitProteins(HMMHitTable, AnnotationFASTADict) # Gets hit protein FASTAs.
-
-print
-print OrganismInfo
-print
 for hit in HMMHitTable:
 	print hit
-print
-for ProteinData in HitProteins:
-	for data in ProteinData:
-		print data
-	print "-----------------------------------------------------------------"
+
+print ">> Extracting Hit Proteins."
+HitProteins = getHitProteins(HMMHitTable, AnnotationFASTADict, OrganismName) # Gets hit protein FASTAs.
+
+if path.isfile(sqlFile):
+	try:
+		HMMDB = sqlite3.connect(sqlFile)
+		print ">> Opened database successfully!";
+		cursor = HMMDB.cursor()
+		cursor.execute('''INSERT INTO Organisms(Organism_Accession,Organism_Description,Source,Organism_Phylogeny)
+		                  VALUES(?,?,?,?)''', OrganismInfo)
+		cursor.execute('''SELECT * FROM Organisms''')
+		print cursor.fetchone()
+		
+		#cursor.execute('''INSERT INTO HMM_Hits(Protein_Accession,HMM_Model,HMM_Score,HMM_E-value,Ali_From,Ali_To,HMM_From,HMM_To,HMM_Coverage)
+		#		          VALUES(?,?,?,?,?,?,?,?,?)''', HMMHitTable[0][0])
+	except sqlite3.Error, e:
+	    print "Error %s:" % e.args[0]
+	    sys.exit(1)
+else:
+	print "Failed to open " + sqlFile
+	sys.exit(1)
