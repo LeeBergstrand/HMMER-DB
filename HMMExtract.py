@@ -1,6 +1,6 @@
 #!/usr/bin/env python 
 # Created by: Lee Bergstrand 
-# Descript: A program that extracts the protiens annotations from a genbank file and searches these 
+# Descript: A program that extracts the protein annotations from a genbank file and searches these 
 #           annotations using HMMsearch and an HMM file. It then stores hits in sqlite database. 
 #
 # Requirements: - This script requires the Biopython module: http://biopython.org/wiki/Download
@@ -232,8 +232,8 @@ if path.isfile(sqlFile):
 		cursor.execute('''SELECT * FROM Organisms''')
 		print cursor.fetchone()
 		
-		#cursor.execute('''INSERT INTO HMM_Hits(Protein_Accession,HMM_Model,HMM_Score,HMM_E-value,Ali_From,Ali_To,HMM_From,HMM_To,HMM_Coverage)
-		#		          VALUES(?,?,?,?,?,?,?,?,?)''', HMMHitTable[0][0])
+		cursor.executemany('''INSERT INTO HMM_Hits(Protein_Accession,HMM_Model,HMM_Score,HMM_E_Value,Ali_From,Ali_To,HMM_From,HMM_To,HMM_Coverage)
+				          VALUES(?,?,?,?,?,?,?,?,?)''', HMMHitTable)
 	except sqlite3.Error, e:
 	    print "Error %s:" % e.args[0]
 	    sys.exit(1)
