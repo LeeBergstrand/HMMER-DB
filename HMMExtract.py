@@ -169,7 +169,7 @@ try:
 	reader  = csv.reader(readFile) # Opens file with csv module which takes into account verying csv formats and parses correctly.
 	print ">> Good CSV file."
 	for row in reader:
-		OrganimHash[row[0]] = row
+		OrganismHash[row[0]] = row
 	readFile.close()
 except IOError:
 	print "Failed to open " + PhyloCSVFile
