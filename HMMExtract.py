@@ -4,7 +4,7 @@
 #           annotations using HMMsearch and an HMM file. It then stores hits in sqlite database. 
 #
 # Requirements: - This script requires the Biopython module: http://biopython.org/wiki/Download
-#               - This script requires HMMER 3.0 or later.
+#               - This script requires HMMER 3.1 or later.
 #               - This script requires sqlLite3 or later.
 #
 # Usage: HMMExtract.py <organism.gbk> <hmm.hmm> <sqldb.sqlite>
@@ -26,6 +26,9 @@ import time # Dev. Import
 
 processors = cpu_count() # Gets number of processor cores for HMMER.
 
+# Regex's
+LocusRegex = re.compile("\(Locus:\s\S*\)")
+LocationRegex = re.compile("\(Location:\s\[(\S*)\:(\S*)\]\((\S)\)\)")
 #===========================================================================================================
 # Functions:
 
@@ -66,7 +69,7 @@ def createProteomeHash(ProteomeFile):
 #------------------------------------------------------------------------------------------------------------
 # 4: Parses HMM searches text output and generates a two dementional array of the domain alignments results.
 def parseHmmsearchResults(HMMResults, HMMName, HMMLength):
-	HitRowRex = re.compile("^\s*\d\s*((\?)|(\!))\s*")
+	HitRowRegex = re.compile("^\s*\d\s*((\?)|(\!))\s*")
 	HMMResults = HMMResults.split(">>") # Splits output at domain alignments.
 	del HMMResults[0] # Deletes stuff at top of text output which would be the first element after the split.
 	HMMResults = [x.split("Alignments")[0] for x in HMMResults] # Removes detailed per alignment info.
@@ -75,7 +78,7 @@ def parseHmmsearchResults(HMMResults, HMMName, HMMLength):
 		proteinResult = proteinResult.splitlines()
 		TargetProtein = proteinResult[0].split()[0] # Records protein accession from first line
 		for row in proteinResult:
-			if HitRowRex.match(row): # If row is a domain table line.
+			if HitRowRegex.match(row): # If row is a domain table line.
 				row = row.split()
 				score   = float(row[2])
 				evalue  = float(row[5])
@@ -122,7 +125,18 @@ def filterHMMHitTable(HMMHitTable):
 def getHitProteins(HMMHitTable, AnnotationFASTADict):
 	HitProteins = []
 	for row in HMMHitTable:
-		HitProteins.append(AnnotationFASTADict[row[0]])
+		ProteinAccession = row[0]
+		ProteinFASTA = AnnotationFASTADict[ProteinAccession]
+
+		Locus = LocusRegex.search(ProteinFASTA).group(0)
+		Locus = Locus.split()[1].rstrip(")")
+
+		LocationData = LocationRegex.search(ProteinFASTA)
+		Start  = LocationData.group(1)
+		End    = LocationData.group(2)
+		Strand = LocationData.group(3)
+		ProteinData = [ProteinAccession, Locus, Start, End, Strand, ProteinFASTA]
+		HitProteins.append(ProteinData)
 	return HitProteins
 #===========================================================================================================
 # Main program code:
@@ -201,7 +215,7 @@ HMMResults  = runHMMSearch(FASTAString, HMMFile) # Runs hmmsearch.
 HMMHitTable = parseHmmsearchResults(HMMResults, HMMName, HMMLength) # Parses hmmsearch results into a two dimensional array.
 HMMHitTable = filterHMMHitTable(HMMHitTable)
 
-HitProteinFASTAs = getHitProteins(HMMHitTable, AnnotationFASTADict) # Gets hit protein FASTAs.
+HitProteins = getHitProteins(HMMHitTable, AnnotationFASTADict) # Gets hit protein FASTAs.
 
 print
 print OrganismInfo
@@ -209,5 +223,7 @@ print
 for hit in HMMHitTable:
 	print hit
 print
-for Protein in HitProteinFASTAs:
-	print Protein
+for ProteinData in HitProteins:
+	for data in ProteinData:
+		print data
+	print "-----------------------------------------------------------------"
