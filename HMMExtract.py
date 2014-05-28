@@ -118,7 +118,7 @@ def filterHMMHitTable(HMMHitTable):
 	HMMHitTable = [row for row in HMMHitTable if row[3] < float("1e-30")] # Filtres by E-value.
 	HMMHitTable = filterHMMHitTableByOverLap(HMMHitTable)
 	HMMHitTable = [row for row in HMMHitTable if row[-1] > 0.3] # Filtres by Query Coverage.
-
+	
 	return	HMMHitTable		
 #------------------------------------------------------------------------------------------------------------
 # 6: Creates list of hits protien FASTAs.
@@ -232,9 +232,19 @@ print ">> Running Hmmsearch..."
 FASTAString = "".join(AnnotationFASTADict.values()) # Saves these annotations to a string.
 HMMResults  = runHMMSearch(FASTAString, HMMFile) # Runs hmmsearch.
 
+if (len(HMMResults) < 1):
+	print "Hmmearch found no hits for " + HMMFile + " in " + OrganismName
+	print "Aborting..."
+	sys.exit(1)
+
 print ">> Parsing and filtering hmmsearch results..."
 HMMHitTable = parseHmmsearchResults(HMMResults, HMMName, HMMLength) # Parses hmmsearch results into a two dimensional array.
 HMMHitTable = filterHMMHitTable(HMMHitTable)
+
+if (len(HMMHitTable) < 1):
+	print "We found no quality hits for " + HMMFile + " in " + OrganismName
+	print "Aborting..."
+	sys.exit(1)
 
 print ">> Extracting Hit Proteins."
 HitProteins = getHitProteins(HMMHitTable, AnnotationFASTADict, OrganismName) # Gets hit protein FASTAs.

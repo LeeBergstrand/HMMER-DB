@@ -52,3 +52,8 @@ coverage.xml
 # Sphinx documentation
 docs/_build/
 
+# Stuff
+SupplementaryScripts/*.faa
+SupplementaryScripts/*.csv
+TestDBs/
+
