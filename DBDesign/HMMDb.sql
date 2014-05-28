@@ -8,7 +8,7 @@
  Target Server Version : 3008004
  File Encoding         : utf-8
 
- Date: 05/27/2014 20:55:46 PM
+ Date: 05/27/2014 22:49:58 PM
 */
 
 PRAGMA foreign_keys = false;
@@ -27,8 +27,7 @@ CREATE TABLE "HMM_Hits" (
 	 "HMM_From" integer(4,0) NOT NULL,
 	 "HMM_To" integer(4,0) NOT NULL,
 	 "HMM_Coverage" real(2,10) NOT NULL,
-	PRIMARY KEY("Protein_Accession","HMM_Model"),
-	CONSTRAINT "fk_Hit_to_Protein" FOREIGN KEY ("Protein_Accession") REFERENCES "Proteins" ("Protein_Accession")
+	PRIMARY KEY("Protein_Accession","HMM_Model","HMM_Score")
 );
 
 -- ----------------------------
@@ -41,7 +40,7 @@ CREATE TABLE "Organisms" (
 	 "Source" text(300,0) NOT NULL,
 	 "Organism_Phylogeny" text(300,0) NOT NULL,
 	PRIMARY KEY("Organism_Accession"),
-	CONSTRAINT "fk_Organism_To_Protiens" FOREIGN KEY ("Organism_Accession") REFERENCES "Proteins" ("Organism_Accession")
+	CONSTRAINT "fk_Organism_To_Protiens" FOREIGN KEY ("Organism_Accession") REFERENCES "Proteins" ("Organism_Accession") ON DELETE CASCADE ON UPDATE CASCADE
 );
 
 -- ----------------------------
@@ -57,8 +56,7 @@ CREATE TABLE "Proteins" (
 	 "Strand" integer(1,0) NOT NULL,
 	 "FASTA_Sequence" text(5500,0) NOT NULL,
 	PRIMARY KEY("Protein_Accession"),
-	CONSTRAINT "fk_Protein_To_Hits" FOREIGN KEY ("Protein_Accession") REFERENCES "HMM_Hits" ("Protein_Accession"),
-	CONSTRAINT "fk_Protein_To_Organism" FOREIGN KEY ("Organism_Accession") REFERENCES "Organisms" ("Organism_Accession")
+	CONSTRAINT "fk_Protein_To_Hits" FOREIGN KEY ("Protein_Accession") REFERENCES "HMM_Hits" ("Protein_Accession") ON DELETE CASCADE ON UPDATE CASCADE
 );
 
 PRAGMA foreign_keys = true;
