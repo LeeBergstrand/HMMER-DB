@@ -1,14 +1,14 @@
 #!/usr/bin/env python 
 # Created by: Lee Bergstrand 
-# Descript: A program that extracts the protein annotations from a genbank file and searches these 
+# Descript: A program that extracts the protein annotations from a fasta file and searches these 
 #           annotations using HMMsearch and an HMM file. It then stores hits in sqlite database. 
 #
 # Requirements: - This script requires the Biopython module: http://biopython.org/wiki/Download
 #               - This script requires HMMER 3.1 or later.
 #               - This script requires sqlLite3 or later.
 #
-# Usage: HMMExtract.py <organism.gbk> <hmm.hmm> <sqldb.sqlite>
-# Example: HMMExtract.py ecoli.gbk helicase.hmm helicasedb.sqlite
+# Usage: HMMExtract.py <organism.faa> <organisms.csv> <hmm.hmm> <sqldb.sqlite>
+# Example: HMMExtract.py ecoli.faa bacteria.csv helicase.hmm helicasedb.sqlite
 #----------------------------------------------------------------------------------------
 #===========================================================================================================
 #Imports & Setup:
@@ -64,7 +64,6 @@ def createProteomeHash(ProteomeFile):
 	except IOError:
 		print "Failed to open " + ProteomeFile
 		exit(1)
-		
 	return ProteomeHash
 #------------------------------------------------------------------------------------------------------------
 # 4: Parses HMM searches text output and generates a two dementional array of the domain alignments results.
@@ -141,44 +140,20 @@ def getHitProteins(HMMHitTable, AnnotationFASTADict, OrganismName):
 #-----------------------------------------------------------------------------------------------------------
 # 7: Inserts organism info into DB.
 def insertOrganismInfo(cursor, OrganismInfo):
-	try:
-		cursor.execute('''INSERT INTO Organisms(Organism_Accession, Organism_Description, Source, Organism_Phylogeny)
-			              VALUES(?,?,?,?)''', OrganismInfo)
-	except sqlite3.IntegrityError as IntegrityError:
-		if "not unique" in str(IntegrityError):
-			pass
-		else:
-			print IntegrityError
-			print "The program will be aborted."
-			sys.exit(1)
+	cursor.execute('''INSERT OR REPLACE INTO Organisms(Organism_Accession, Organism_Description, Source, Organism_Phylogeny)
+			          VALUES(?,?,?,?)''', OrganismInfo)
 #-----------------------------------------------------------------------------------------------------------
 # 8: Inserts organism info into DB.
 def insertHits(cursor, HMMHitTable):
 	for hit in HMMHitTable:
-		try:
-			cursor.executemany('''INSERT INTO HMM_Hits(Protein_Accession, HMM_Model, HMM_Score, HMM_E_Value, Ali_From, Ali_To, HMM_From, HMM_To, HMM_Coverage) 
-			                      VALUES(?,?,?,?,?,?,?,?,?)''', HMMHitTable)
-		except sqlite3.IntegrityError as IntegrityError:
-			if "not unique" in str(IntegrityError):
-				continue
-			else:
-				print IntegrityError
-				print "The program will be aborted."
-				sys.exit(1)	
+		cursor.executemany('''INSERT OR REPLACE INTO HMM_Hits(Protein_Accession, HMM_Model, HMM_Score, HMM_E_Value, Ali_From, Ali_To, HMM_From, HMM_To, HMM_Coverage) 
+			                  VALUES(?,?,?,?,?,?,?,?,?)''', HMMHitTable)
 #-----------------------------------------------------------------------------------------------------------
 # 9: Inserts organism info into DB.
 def insertProteins(cursor, HitProteins):
 	for protein in HitProteins:
-		try:
-			cursor.execute('''INSERT INTO Proteins(Protein_Accession,Organism_Accession,Locus,Start,End,Strand,FASTA_Sequence)
-							  VALUES(?,?,?,?,?,?,?)''', protein)
-		except sqlite3.IntegrityError as IntegrityError:
-			if "not unique" in str(IntegrityError):
-				continue
-			else:
-				print IntegrityError
-				print "The program will be aborted."
-				sys.exit(1)	
+		cursor.execute('''INSERT OR REPLACE INTO Proteins(Protein_Accession,Organism_Accession,Locus,Start,End,Strand,FASTA_Sequence)
+		                  VALUES(?,?,?,?,?,?,?)''', protein)
 #===========================================================================================================
 # Main program code:
 	
@@ -264,23 +239,13 @@ HitProteins = getHitProteins(HMMHitTable, AnnotationFASTADict, OrganismName) # G
 if path.isfile(sqlFile):
 	try:
 		HMMDB = sqlite3.connect(sqlFile)
-		print ">> Opened database successfully!";
+		print ">> Opened database successfully!"
 		cursor = HMMDB.cursor()
 		
 		insertOrganismInfo(cursor, OrganismInfo)
-		cursor.execute('''SELECT * FROM Organisms''')
-		print cursor.fetchone()
-		
 		insertHits(cursor, HMMHitTable)
-		cursor.execute('''SELECT * FROM HMM_Hits''')
-		for row in cursor.fetchall():
-			print row
-		
 		insertProteins(cursor, HitProteins)	
-		cursor.execute('''SELECT * FROM Proteins''')
-		for row in cursor.fetchall():
-			print row
-
+		
 		HMMDB.commit()
 		HMMDB.close()
 	except sqlite3.Error as Error:
