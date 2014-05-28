@@ -93,6 +93,8 @@ if 'plasmid' in description.lower():
 	accessionType = 'Plasmid'
 elif 'chromosome' in description.lower():
 	accessionType = 'Chromosome'
+elif 'genome' in description.lower():
+	accessionType = 'Chromosome'
 else:
 	accessionType = 'Unknown'
 source = record.annotations['source'].replace(",", "")
