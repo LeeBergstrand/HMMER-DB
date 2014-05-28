@@ -86,7 +86,6 @@ except IOError:
 print ">> Extracting Protein Annotations..."
 FASTA = getProtienAnnotationFasta(record) # Creates a dictionary containing all protein annotations in the gbk file.
 
-
 print ">> Extracting Organism Info..."
 description = record.description.replace(",", "")
 accessionType = ""
@@ -99,8 +98,6 @@ else:
 source = record.annotations['source'].replace(",", "")
 taxonomy = "_".join(record.annotations['taxonomy'])
 OrganismString = OrganismID + "," + accessionType + "," + description + "," + source + "," + taxonomy + "\n"
-
-print OrganismString
 
 # Write annotations to FASTA file.
 try:
