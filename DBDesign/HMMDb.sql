@@ -8,7 +8,7 @@
  Target Server Version : 3008004
  File Encoding         : utf-8
 
- Date: 05/27/2014 13:29:53 PM
+ Date: 05/27/2014 20:55:46 PM
 */
 
 PRAGMA foreign_keys = false;
@@ -21,12 +21,13 @@ CREATE TABLE "HMM_Hits" (
 	 "Protein_Accession" text(25,0) NOT NULL,
 	 "HMM_Model" text(35,0) NOT NULL,
 	 "HMM_Score" integer(4,0) NOT NULL,
-	 "HMM_E-value" real(4,10) NOT NULL,
+	 "HMM_E_Value" real(4,10) NOT NULL,
 	 "Ali_From" integer(4,0) NOT NULL,
 	 "Ali_To" integer(4,0) NOT NULL,
-	 "HMM_To" integer(4,0) NOT NULL,
 	 "HMM_From" integer(4,0) NOT NULL,
+	 "HMM_To" integer(4,0) NOT NULL,
 	 "HMM_Coverage" real(2,10) NOT NULL,
+	PRIMARY KEY("Protein_Accession","HMM_Model"),
 	CONSTRAINT "fk_Hit_to_Protein" FOREIGN KEY ("Protein_Accession") REFERENCES "Proteins" ("Protein_Accession")
 );
 

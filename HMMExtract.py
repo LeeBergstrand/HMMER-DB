@@ -138,6 +138,47 @@ def getHitProteins(HMMHitTable, AnnotationFASTADict, OrganismName):
 		ProteinData = [ProteinAccession, OrganismName, Locus, Start, End, Strand, ProteinFASTA]
 		HitProteins.append(ProteinData)
 	return HitProteins
+#-----------------------------------------------------------------------------------------------------------
+# 7: Inserts organism info into DB.
+def insertOrganismInfo(cursor, OrganismInfo):
+	try:
+		cursor.execute('''INSERT INTO Organisms(Organism_Accession, Organism_Description, Source, Organism_Phylogeny)
+			              VALUES(?,?,?,?)''', OrganismInfo)
+	except sqlite3.IntegrityError as IntegrityError:
+		if "not unique" in str(IntegrityError):
+			pass
+		else:
+			print IntegrityError
+			print "The program will be aborted."
+			sys.exit(1)
+#-----------------------------------------------------------------------------------------------------------
+# 8: Inserts organism info into DB.
+def insertHits(cursor, HMMHitTable):
+	for hit in HMMHitTable:
+		try:
+			cursor.executemany('''INSERT INTO HMM_Hits(Protein_Accession, HMM_Model, HMM_Score, HMM_E_Value, Ali_From, Ali_To, HMM_From, HMM_To, HMM_Coverage) 
+			                      VALUES(?,?,?,?,?,?,?,?,?)''', HMMHitTable)
+		except sqlite3.IntegrityError as IntegrityError:
+			if "not unique" in str(IntegrityError):
+				continue
+			else:
+				print IntegrityError
+				print "The program will be aborted."
+				sys.exit(1)	
+#-----------------------------------------------------------------------------------------------------------
+# 9: Inserts organism info into DB.
+def insertProteins(cursor, HitProteins):
+	for protein in HitProteins:
+		try:
+			cursor.execute('''INSERT INTO Proteins(Protein_Accession,Organism_Accession,Locus,Start,End,Strand,FASTA_Sequence)
+							  VALUES(?,?,?,?,?,?,?)''', protein)
+		except sqlite3.IntegrityError as IntegrityError:
+			if "not unique" in str(IntegrityError):
+				continue
+			else:
+				print IntegrityError
+				print "The program will be aborted."
+				sys.exit(1)	
 #===========================================================================================================
 # Main program code:
 	
@@ -225,22 +266,27 @@ if path.isfile(sqlFile):
 		HMMDB = sqlite3.connect(sqlFile)
 		print ">> Opened database successfully!";
 		cursor = HMMDB.cursor()
-		cursor.execute('''INSERT INTO Organisms(Organism_Accession,Organism_Description,Source,Organism_Phylogeny)
-		                  VALUES(?,?,?,?)''', OrganismInfo)
+		
+		insertOrganismInfo(cursor, OrganismInfo)
 		cursor.execute('''SELECT * FROM Organisms''')
 		print cursor.fetchone()
 		
-		cursor.executemany('''INSERT INTO HMM_Hits(Protein_Accession,HMM_Model,HMM_Score,HMM_E_Value,Ali_From,Ali_To,HMM_From,HMM_To,HMM_Coverage) 
-		                      VALUES(?,?,?,?,?,?,?,?,?)''', HMMHitTable)
+		insertHits(cursor, HMMHitTable)
 		cursor.execute('''SELECT * FROM HMM_Hits''')
+		for row in cursor.fetchall():
+			print row
 		
+		insertProteins(cursor, HitProteins)	
+		cursor.execute('''SELECT * FROM Proteins''')
 		for row in cursor.fetchall():
 			print row
 
+		HMMDB.commit()
 		HMMDB.close()
-	except sqlite3.Error, e:
-	    print "Error %s:" % e.args[0]
-	    sys.exit(1)
+	except sqlite3.Error as Error:
+		print Error
+		print "The program will be aborted."
+		sys.exit(1)		
 else:
 	print "Failed to open " + sqlFile
 	sys.exit(1)
