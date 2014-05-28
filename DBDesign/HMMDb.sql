@@ -1,14 +1,14 @@
 /*
  Navicat SQLite Data Transfer
 
- Source Server         : HMMHits
+ Source Server         : TestDB
  Source Server Version : 3008004
  Source Database       : main
 
  Target Server Version : 3008004
  File Encoding         : utf-8
 
- Date: 05/27/2014 22:49:58 PM
+ Date: 05/28/2014 12:45:24 PM
 */
 
 PRAGMA foreign_keys = false;
@@ -18,6 +18,7 @@ PRAGMA foreign_keys = false;
 -- ----------------------------
 DROP TABLE IF EXISTS "HMM_Hits";
 CREATE TABLE "HMM_Hits" (
+	 "Hit_HASH" text(40,0) NOT NULL,
 	 "Protein_Accession" text(25,0) NOT NULL,
 	 "HMM_Model" text(35,0) NOT NULL,
 	 "HMM_Score" integer(4,0) NOT NULL,
@@ -27,7 +28,8 @@ CREATE TABLE "HMM_Hits" (
 	 "HMM_From" integer(4,0) NOT NULL,
 	 "HMM_To" integer(4,0) NOT NULL,
 	 "HMM_Coverage" real(2,10) NOT NULL,
-	PRIMARY KEY("Protein_Accession","HMM_Model","HMM_Score")
+	PRIMARY KEY("Hit_HASH"),
+	CONSTRAINT "fk_Proteins" FOREIGN KEY ("Protein_Accession") REFERENCES "Proteins" ("Protein_Accession") ON DELETE CASCADE ON UPDATE CASCADE
 );
 
 -- ----------------------------
@@ -36,11 +38,11 @@ CREATE TABLE "HMM_Hits" (
 DROP TABLE IF EXISTS "Organisms";
 CREATE TABLE "Organisms" (
 	 "Organism_Accession" text(25,0) NOT NULL,
+	 "Accession_Type" text(150,0) NOT NULL,
 	 "Organism_Description" text(300,0) NOT NULL,
 	 "Source" text(300,0) NOT NULL,
 	 "Organism_Phylogeny" text(300,0) NOT NULL,
-	PRIMARY KEY("Organism_Accession"),
-	CONSTRAINT "fk_Organism_To_Protiens" FOREIGN KEY ("Organism_Accession") REFERENCES "Proteins" ("Organism_Accession") ON DELETE CASCADE ON UPDATE CASCADE
+	PRIMARY KEY("Organism_Accession")
 );
 
 -- ----------------------------
@@ -56,7 +58,7 @@ CREATE TABLE "Proteins" (
 	 "Strand" integer(1,0) NOT NULL,
 	 "FASTA_Sequence" text(5500,0) NOT NULL,
 	PRIMARY KEY("Protein_Accession"),
-	CONSTRAINT "fk_Protein_To_Hits" FOREIGN KEY ("Protein_Accession") REFERENCES "HMM_Hits" ("Protein_Accession") ON DELETE CASCADE ON UPDATE CASCADE
+	CONSTRAINT "fk_Organisms" FOREIGN KEY ("Organism_Accession") REFERENCES "Organisms" ("Organism_Accession") ON DELETE CASCADE ON UPDATE CASCADE
 );
 
 PRAGMA foreign_keys = true;

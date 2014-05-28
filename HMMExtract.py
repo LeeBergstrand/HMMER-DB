@@ -18,6 +18,7 @@ import subprocess
 import sqlite3
 import csv
 import re
+import hashlib
 from os import path
 from Bio import SeqIO 
 from multiprocessing import cpu_count
@@ -140,20 +141,23 @@ def getHitProteins(HMMHitTable, AnnotationFASTADict, OrganismName):
 #-----------------------------------------------------------------------------------------------------------
 # 7: Inserts organism info into DB.
 def insertOrganismInfo(cursor, OrganismInfo):
-	cursor.execute('''INSERT OR REPLACE INTO Organisms(Organism_Accession, Organism_Description, Source, Organism_Phylogeny)
-			          VALUES(?,?,?,?)''', OrganismInfo)
+	cursor.execute('''INSERT OR REPLACE INTO Organisms(Organism_Accession, Accession_Type, Organism_Description, Source, Organism_Phylogeny)
+			          VALUES(?,?,?,?,?)''', OrganismInfo)
 #-----------------------------------------------------------------------------------------------------------
-# 8: Inserts organism info into DB.
-def insertHits(cursor, HMMHitTable):
-	for hit in HMMHitTable:
-		cursor.executemany('''INSERT OR REPLACE INTO HMM_Hits(Protein_Accession, HMM_Model, HMM_Score, HMM_E_Value, Ali_From, Ali_To, HMM_From, HMM_To, HMM_Coverage) 
-			                  VALUES(?,?,?,?,?,?,?,?,?)''', HMMHitTable)
-#-----------------------------------------------------------------------------------------------------------
-# 9: Inserts organism info into DB.
+# 8: Inserts protein info into DB.
 def insertProteins(cursor, HitProteins):
 	for protein in HitProteins:
 		cursor.execute('''INSERT OR REPLACE INTO Proteins(Protein_Accession,Organism_Accession,Locus,Start,End,Strand,FASTA_Sequence)
 		                  VALUES(?,?,?,?,?,?,?)''', protein)
+#-----------------------------------------------------------------------------------------------------------
+# 9: Inserts hits into DB and creates md5 hash for primary key.
+def insertHits(cursor, HMMHitTable):
+	HitHash = hashlib.md5()
+	for hit in HMMHitTable:
+		HitHash.update("".join([str(i) for i in HMMHitTable])) # Converts every list element to a string, joins them and updates Hash.
+		hit = [HitHash.hexdigest()] + hit
+		cursor.execute('''INSERT OR REPLACE INTO HMM_Hits(Hit_HASH, Protein_Accession, HMM_Model, HMM_Score, HMM_E_Value, Ali_From, Ali_To, HMM_From, HMM_To, HMM_Coverage) 
+			                  VALUES(?,?,?,?,?,?,?,?,?,?)''', hit)
 #===========================================================================================================
 # Main program code:
 	
@@ -213,7 +217,6 @@ try:
 		currentLine = inFile.readline()
 		while not HMMLengthRegex.match(currentLine):
 			currentLine = inFile.readline()
-		
 		HMMLength = int(currentLine.split()[1])
 except IOError:
 	print "Failed to open " + HMMFile
@@ -239,19 +242,23 @@ HitProteins = getHitProteins(HMMHitTable, AnnotationFASTADict, OrganismName) # G
 if path.isfile(sqlFile):
 	try:
 		HMMDB = sqlite3.connect(sqlFile)
-		print ">> Opened database successfully!"
+		print ">> Opened database successfully."
 		cursor = HMMDB.cursor()
 		
+		print ">> Inserting Organism Info."
 		insertOrganismInfo(cursor, OrganismInfo)
+		print ">> Inserting Proteins."
+		insertProteins(cursor, HitProteins)
+		print ">> Inserting Hits."
 		insertHits(cursor, HMMHitTable)
-		insertProteins(cursor, HitProteins)	
-		
+			
 		HMMDB.commit()
 		HMMDB.close()
 	except sqlite3.Error as Error:
-		print Error
+		print "sqlite3 Error: " + str(Error)
 		print "The program will be aborted."
 		sys.exit(1)		
 else:
 	print "Failed to open " + sqlFile
 	sys.exit(1)
+print ">> Done!"
