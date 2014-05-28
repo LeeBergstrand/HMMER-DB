@@ -216,8 +216,6 @@ HMMResults  = runHMMSearch(FASTAString, HMMFile) # Runs hmmsearch.
 print ">> Parsing and filtering hmmsearch results..."
 HMMHitTable = parseHmmsearchResults(HMMResults, HMMName, HMMLength) # Parses hmmsearch results into a two dimensional array.
 HMMHitTable = filterHMMHitTable(HMMHitTable)
-for hit in HMMHitTable:
-	print hit
 
 print ">> Extracting Hit Proteins."
 HitProteins = getHitProteins(HMMHitTable, AnnotationFASTADict, OrganismName) # Gets hit protein FASTAs.
@@ -232,12 +230,13 @@ if path.isfile(sqlFile):
 		cursor.execute('''SELECT * FROM Organisms''')
 		print cursor.fetchone()
 		
-		for hit in HMMHitTable: 
-			cursor.execute('''INSERT INTO HMM_Hits(Protein_Accession,HMM_Model,HMM_Score,HMM_E_Value,Ali_From,Ali_To,HMM_From,HMM_To,HMM_Coverage)
-				          VALUES(?,?,?,?,?,?,?,?,?)''', hit)
+		cursor.executemany('''INSERT INTO HMM_Hits(Protein_Accession,HMM_Model,HMM_Score,HMM_E_Value,Ali_From,Ali_To,HMM_From,HMM_To,HMM_Coverage) 
+		                      VALUES(?,?,?,?,?,?,?,?,?)''', HMMHitTable)
 		cursor.execute('''SELECT * FROM HMM_Hits''')
-		for x in cursor.fetchmany():
-			print x
+		
+		for row in cursor.fetchall():
+			print row
+
 		HMMDB.close()
 	except sqlite3.Error, e:
 	    print "Error %s:" % e.args[0]
