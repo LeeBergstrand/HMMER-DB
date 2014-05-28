@@ -232,10 +232,6 @@ if path.isfile(sqlFile):
 		cursor.execute('''SELECT * FROM Organisms''')
 		print cursor.fetchone()
 		
-<<<<<<< HEAD
-		cursor.executemany('''INSERT INTO HMM_Hits(Protein_Accession,HMM_Model,HMM_Score,HMM_E_Value,Ali_From,Ali_To,HMM_From,HMM_To,HMM_Coverage)
-				          VALUES(?,?,?,?,?,?,?,?,?)''', HMMHitTable)
-=======
 		for hit in HMMHitTable: 
 			cursor.execute('''INSERT INTO HMM_Hits(Protein_Accession,HMM_Model,HMM_Score,HMM_E_Value,Ali_From,Ali_To,HMM_From,HMM_To,HMM_Coverage)
 				          VALUES(?,?,?,?,?,?,?,?,?)''', hit)
@@ -243,7 +239,6 @@ if path.isfile(sqlFile):
 		for x in cursor.fetchmany():
 			print x
 		HMMDB.close()
->>>>>>> In Schema Renamed Column HMM_E-value to HMM_E_Value so it is SQL compliant.
 	except sqlite3.Error, e:
 	    print "Error %s:" % e.args[0]
 	    sys.exit(1)
