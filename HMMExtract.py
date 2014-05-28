@@ -1,7 +1,8 @@
 #!/usr/bin/env python 
 # Created by: Lee Bergstrand 
 # Descript: A program that extracts the protein annotations from a fasta file and searches these 
-#           annotations using HMMsearch and an HMM file. It then stores hits in sqlite database. 
+#           annotations using HMMsearch and an HMM file. It then stores hits along with organism
+#           information (gathered from a csv file) in a sqlite3 database. 
 #
 # Requirements: - This script requires the Biopython module: http://biopython.org/wiki/Download
 #               - This script requires HMMER 3.1 or later.
@@ -157,7 +158,7 @@ def insertHits(cursor, HMMHitTable):
 		HitHash.update("".join([str(i) for i in HMMHitTable])) # Converts every list element to a string, joins them and updates Hash.
 		hit = [HitHash.hexdigest()] + hit
 		cursor.execute('''INSERT OR REPLACE INTO HMM_Hits(Hit_HASH, Protein_Accession, HMM_Model, HMM_Score, HMM_E_Value, Ali_From, Ali_To, HMM_From, HMM_To, HMM_Coverage) 
-			                  VALUES(?,?,?,?,?,?,?,?,?,?)''', hit)
+			              VALUES(?,?,?,?,?,?,?,?,?,?)''', hit)
 #===========================================================================================================
 # Main program code:
 	
