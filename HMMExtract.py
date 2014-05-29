@@ -94,32 +94,28 @@ def parseHmmsearchResults(HMMResults, HMMName, HMMLength):
 #------------------------------------------------------------------------------------------------------------
 # 6: Fitres HMM Hits.
 def filterHMMHitTable(HMMHitTable):
-	#------------------------------------------------------------------------------------------------------------
-	# 6a: This code eliminates hits to the same protien that overlap by greater than 50% by selecting the one with the greater E-value.
-	# Note: this code assumes that HMMsearch output domains to the same protein are ordered by hightest to lowest E-value.
-	def filterHMMHitTableByOverLap(HMMHitTable):
-		FiltredHMMHitTable = list(HMMHitTable)
-		for i in range(0,(len(HMMHitTable)-1)):
-			RowOne = HMMHitTable[i]    # Current Row in hit table.
-			RowTwo = HMMHitTable[i+1]  # Row below the current row.
-			if(RowOne[0] == RowTwo[0]): # If they have the same targe protein.
-				AlignmentOneLength = RowOne[-2] - RowOne[-3] # RowOne AliTo - AliFrom
-				AlignmentTwoLength = RowTwo[-2] - RowTwo[-3] # RowTwo AliTo - AliFrom
-				Overlap = RowOne[-2] - RowTwo[-3]  # RowOne AliTo -  RowTwo AliFrom
-				
-				if (Overlap > 0): # If there is overlap
-					# If the overlap is greater than 50% of either alignment.
-					if((((float(Overlap)/float(AlignmentOneLength)) > 0.5) or ((float(Overlap)/float(AlignmentTwoLength)) > 0.5))):
-						FiltredHMMHitTable.remove(RowOne) # In the normal HMMsearch output domains to the same protein are ordered hightest to
-												          # lowest E-value. Therefore only the top row needs to be deleted. 
-					
-		return FiltredHMMHitTable
-	#------------------------------------------------------------------------------------------------------------
 
 	HMMHitTable = [row for row in HMMHitTable if row[3] < float("1e-30")] # Filtres by E-value.
-	HMMHitTable = filterHMMHitTableByOverLap(HMMHitTable)
-	HMMHitTable = [row for row in HMMHitTable if row[-1] > 0.3] # Filtres by Query Coverage.
 	
+	i = 0
+	while i < (len(HMMHitTable)-1):
+		RowOne = HMMHitTable[i]    # Current Row in hit table.
+		RowTwo = HMMHitTable[i+1]  # Row below.
+		if(RowOne[0] == RowTwo[0]): # If they have the same targe protein.
+			AlignmentOneLength = RowOne[-2] - RowOne[-3] # RowOne AliTo - AliFrom
+			AlignmentTwoLength = RowTwo[-2] - RowTwo[-3] # RowTwo AliTo - AliFrom
+			Overlap = RowOne[-2] - RowTwo[-3]  # RowOne AliTo -  RowTwo AliFrom
+			if (Overlap > 0): # If there is overlap...
+				# If the overlap is greater than 50% of either alignment.
+				if((((float(Overlap)/float(AlignmentOneLength)) > 0.5) or ((float(Overlap)/float(AlignmentTwoLength)) > 0.5))):
+					if RowOne[3] < RowTwo[3]: # If row one has a lower E-value than row two remove row two else remove row one.
+						HMMHitTable.remove(RowTwo)
+					else:
+						HMMHitTable.remove(RowOne)
+					i = i - 1 # Resets list index.
+		i += 1
+			
+	HMMHitTable = [row for row in HMMHitTable if row[-1] > 0.3] # Filtres by Query Coverage.
 	return	HMMHitTable		
 #------------------------------------------------------------------------------------------------------------
 # 6: Creates list of hits protien FASTAs.
