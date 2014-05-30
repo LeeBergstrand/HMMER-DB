@@ -255,7 +255,7 @@ HitProteins = getHitProteins(HMMHitTable, AnnotationFASTADict, OrganismName) # G
 
 if path.isfile(sqlFile):
 	try:
-		HMMDB = sqlite3.connect(sqlFile, timeout = 60)
+		HMMDB = sqlite3.connect(sqlFile, timeout = 600)
 		print ">> Opened database successfully."
 		cursor = HMMDB.cursor()
 		

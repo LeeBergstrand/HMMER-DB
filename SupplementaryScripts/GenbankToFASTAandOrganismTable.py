@@ -37,7 +37,20 @@ def getProtienAnnotationFasta(seqRecord):
 		if feature.type == "CDS": # CDS means coding sequence (These are the only feature we're interested in)
 			featQualifers = feature.qualifiers # Each feature contains a dictionary called quailifiers which contains           
 			                                   # data about the sequence feature (for example the translation)
-			location = str(feature.location)
+			
+			start  = str(feature.location.start)
+			end    = str(feature.location.end)
+			strand = feature.location.strand
+			if strand == None:
+				strand = "?"
+			elif int(strand) < 0:
+				strand = "-"
+			elif int(strand) > 0:
+				strand =  "+"
+			else:
+				strand = "?"
+			location = "[" + start + ":" + end + "](" + strand + ")"
+
 			# Gets the required qualifers. Uses featQualifers.get to return the quatifer or a default value if the quatifer
 			# is not found. Calls strip to remove unwanted brackets and ' from quantifer before storing it as a string.
 			protein_id = str(featQualifers.get('protein_id','no_protein_id')).strip('\'[]')
