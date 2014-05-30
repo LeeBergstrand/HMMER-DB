@@ -141,7 +141,7 @@ def getHitProteins(HMMHitTable, AnnotationFASTADict, OrganismName):
 		print "This is the organism: ", OrganismName
 		print "The AttributeError was ", str(Error)
 		sys.exit(1)
-	return HitProteins.
+	return HitProteins
 #-----------------------------------------------------------------------------------------------------------
 # 7: Inserts organism info into DB.
 def insertOrganismInfo(cursor, OrganismInfo):
