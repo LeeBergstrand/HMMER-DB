@@ -37,10 +37,10 @@ LocationRegex = re.compile("\(Location:\s\[(\S*)\:(\S*)\]\((\S)\)\)")
 # 1: Checks if in proper number of arguments are passed gives instructions on proper use.
 def argsCheck(numArgs):
 	if len(sys.argv) < numArgs or len(sys.argv) > numArgs:
-		print "Sequence Downloader"
+		print "Hmmer hit cataloguer."
 		print "By Lee Bergstrand\n"
-		print "Usage: " + sys.argv[0] + " <organism.gbk> <hmm.hmm> <sqldb.sqlite>"
-		print "Examples: " + sys.argv[0] + " ecoli.gbk helicase.hmm helicasedb.sqlite"
+		print "Usage: " + sys.argv[0] + "  <organism.faa> <organisms.csv> <hmm.hmm> <sqldb.sqlite>"
+		print "Examples: " + sys.argv[0] + "  <organism.faa> <organisms.csv> <hmm.hmm> <sqldb.sqlite>"
 		sys.exit(1) # Aborts program. (exit(1) indicates that an error occurred)
 #------------------------------------------------------------------------------------------------------------
 # 2: Runs HMMER with settings specific for extracting subject sequences.
