@@ -1,4 +1,4 @@
-HMM-Search-And-Extraction
-=========================
+HMMER-DB
+========
 
-Tools for search and extracting proteins that match specific Hidden Markov Models. Creates a query-read sqlite database of HMM hits.
+Software for storing hits from HMMER's hmmsearch as a SQLite database.
