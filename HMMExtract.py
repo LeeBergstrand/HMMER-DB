@@ -127,13 +127,18 @@ def getHitProteins(HMMHitTable, AnnotationFASTADict, OrganismName):
 
 		Locus = LocusRegex.search(ProteinFASTA).group(0)
 		Locus = Locus.split()[1].rstrip(")")
-
+	try:
 		LocationData = LocationRegex.search(ProteinFASTA)
 		Start  = LocationData.group(1)
 		End    = LocationData.group(2)
 		Strand = LocationData.group(3)
 		ProteinData = [ProteinAccession, OrganismName, Locus, Start, End, Strand, ProteinFASTA]
 		HitProteins.append(ProteinData)
+	except AttributeError as Error:
+		print LocationData
+		print "This is the organism: ", OrganismName
+		print "The AttributeError was ", str(Error)
+		sys.exit(1)
 	return HitProteins
 #-----------------------------------------------------------------------------------------------------------
 # 7: Inserts organism info into DB.
