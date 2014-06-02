@@ -1,0 +1,27 @@
+#!/usr/bin/env Rscript 
+# Created by: Lee Bergstrand 
+# Descript: Creates plot showing E-value distribution of HMMHits from HMMER-DB
+#             
+# Requirements: 
+#-----------------------------------------------------------------------------
+#Imports:
+library(ggplot2)
+library(scales)
+library(RSQLite)
+
+#Functions:
+reverselog_trans <- function(base = exp(1)) {
+  trans <- function(x) -log(x, base)
+  inv <- function(x) base^(-x)
+  trans_new(paste0("reverselog-", format(base)), trans, inv, 
+            log_breaks(base = base), 
+            domain = c(1e-100, Inf))
+}
+
+sqlite = dbDriver("SQLite")
+HMMDB = dbConnect(sqlite, "/Users/lee/Data/SteriodHMMs/HMMDB.sqlite")
+
+data = dbGetQuery(HMMDB, "SELECT HMM_Hits.HMM_E_Value, HMM_Hits.HMM_Model FROM HMM_Hits")
+
+plotObj = ggplot(data, aes(x = HMM_E_Value, y = HMM_Model))
+plotObj + geom_point(alpha = 1/10) + scale_x_continuous(trans = reverselog_trans(10))
