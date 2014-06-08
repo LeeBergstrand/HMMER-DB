@@ -14,23 +14,37 @@ sqlite = dbDriver("SQLite")
 HMMDB = dbConnect(sqlite, "/Users/lee/Data/SteriodHMMs/HMMDB.sqlite")
 init_extensions(HMMDB)
 
-data = dbGetQuery(HMMDB, "SELECT avg(subQuery.HMM_Family_Count) as Completeness, count(subQuery.Source) as Organism_Count, substr(subQuery.Phylogeny,0,88) as Phylogeny
+data = dbGetQuery(HMMDB, "SELECT median(subQuery.HMM_Family_Count) as Completeness, 
+                                 count(subQuery.Source) as Organism_Count, 
+                                 subQuery.Phylogeny as Phylogeny, 
+                                 substr(subQuery.Phylogeny,0,20) as Phylum 
                           FROM
                           (  
                             SELECT count(DISTINCT HMM_Data.HMM_Family) as HMM_Family_Count, Organisms.Source as Source, Organisms.Organism_Phylogeny as Phylogeny
                           	FROM HMM_Data, HMM_Hits, Organisms, Proteins
                           	WHERE HMM_Data.HMM_Model = HMM_Hits.HMM_Model 
                                   AND HMM_Hits.Protein_Accession = Proteins.Protein_Accession 
-                                  AND Proteins.Organism_Accession = Organisms.Organism_Accession 
+                                  AND Proteins.Organism_Accession = Organisms.Organism_Accession
                           	GROUP BY Organisms.Source
                           	ORDER BY HMM_Family_Count
                           ) as subQuery
-                          WHERE Phylogeny LIKE '%Actinobacteria%' AND subQuery.HMM_Family_Count >= 18
+                          WHERE Phylogeny LIKE 'Bacteria%'
                           GROUP BY Phylogeny
-                          ORDER BY Phylogeny")
+                          HAVING Completeness >= 13.8
+                          ORDER BY Phylum")
 
-print(data)  
+head(data)
 
-plotObj = ggplot(data, aes(x = Phylogeny, y = Completeness, fill = Organism_Count))
-plotObj + geom_bar(stat="identity") + coord_flip()
+plotObj = ggplot(data, aes(x = Phylogeny, y = Completeness, fill = Phylum))
+plotObj + geom_bar(stat="identity") + coord_flip() +
+          theme(plot.background = element_rect(fill = "black"),
+                title = element_text(colour = "white"),
+                legend.title = element_text(colour = "black"),
+                #legend.position = "none",
+                axis.title = element_text(colour = "white"),
+                axis.text = element_text(colour = "white"),
+                axis.ticks = element_line(colour = "white")) +
+          xlab("Bacterial Genra") +
+          ylab("Median Completeness (number of protiens with hits).") +
+          ggtitle("Bacterial phyla with a median completness of greater than 60%.")
 

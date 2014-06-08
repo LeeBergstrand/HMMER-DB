@@ -35,7 +35,8 @@ data = dbGetQuery(HMMDB, "SELECT
 plotObj = ggplot(data, aes(x = HMM_E_Value, y = HMM_Model, colour = factor(HMM_Family)))
 plotObj + geom_point(alpha = 1/10) + scale_x_continuous(trans = reverselog_trans(10)) + 
           facet_grid(HMM_Family ~ ., scales = "free") + theme_bw() + 
-          theme(legend.position = "none", plot.background = element_rect(fill = "black"), title = element_text(colour = "white"), axis.text = element_text(colour = "white"), axis.title = element_text(colour = "white"), axis.ticks = element_line(colour = "white")) + 
-          ylab("HMM Model") + 
-          xlab("HMM hit E-Value distribution per HMM") +
-          ggtitle("E-Value distribution of all hits for all Hidden Markov Models.")
+          theme(legend.position = "none", plot.background = element_rect(fill = "black"), 
+                axis.text = element_text(colour = "white"),
+                axis.text.y = element_text(angle = -45, hjust = 1),
+                axis.text.x = element_text(angle = -90, hjust = 1),
+                axis.ticks = element_line(colour = "white"))
