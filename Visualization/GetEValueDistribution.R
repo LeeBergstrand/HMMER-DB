@@ -2,7 +2,7 @@
 # Created by: Lee Bergstrand 
 # Descript: Creates plot showing E-value distribution of HMMHits from HMMER-DB
 #             
-# Requirements: 
+# Requirements: ggplot2, scales and RSQLite
 #-----------------------------------------------------------------------------
 #Imports:
 library(ggplot2)
@@ -10,7 +10,8 @@ library(scales)
 library(RSQLite)
 
 #Functions:
-reverselog_trans = function(base = exp(1)) {
+reverselog_trans = function(base = exp(1)) 
+{
   trans = function(x) -log(x, base)
   inv = function(x) base^(-x)
   trans_new(paste0("reverselog-", format(base)), trans, inv, 
@@ -21,6 +22,7 @@ reverselog_trans = function(base = exp(1)) {
 sqlite = dbDriver("SQLite")
 HMMDB = dbConnect(sqlite, "/Users/lee/Data/SteriodHMMs/HMMDB.sqlite")
 
+# Executes SQL query and loads results directly into a dataframe.
 data = dbGetQuery(HMMDB, "SELECT
                             HMM_Hits.HMM_E_Value,
 	                          HMM_Hits.HMM_Model,
@@ -30,8 +32,9 @@ data = dbGetQuery(HMMDB, "SELECT
 	                          HMM_Data
                           WHERE
 	                          HMM_Hits.HMM_Model = HMM_Data.HMM_Model
-                            AND HMM_Hits.HMM_Coverage > 0.50")
+                            AND HMM_Hits.HMM_Coverage > 0.50") # Coverage filter 
 
+# Plots Data as a bar graph.
 plotObj = ggplot(data, aes(x = HMM_E_Value, y = HMM_Model, colour = factor(HMM_Family)))
 plotObj + geom_point(alpha = 1/10) + scale_x_continuous(trans = reverselog_trans(10)) + 
           facet_grid(HMM_Family ~ ., scales = "free") + theme_bw() + 
