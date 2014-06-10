@@ -57,3 +57,5 @@ SupplementaryScripts/*.faa
 SupplementaryScripts/*.csv
 TestDBs/
 
+.Rhistory
+.RData

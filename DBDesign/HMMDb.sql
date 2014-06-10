@@ -1,17 +1,27 @@
 /*
  Navicat SQLite Data Transfer
 
- Source Server         : TestDB
+ Source Server         : RawDB
  Source Server Version : 3008004
  Source Database       : main
 
  Target Server Version : 3008004
  File Encoding         : utf-8
 
- Date: 05/28/2014 12:45:24 PM
+ Date: 06/10/2014 14:45:40 PM
 */
 
 PRAGMA foreign_keys = false;
+
+-- ----------------------------
+--  Table structure for HMM_Data
+-- ----------------------------
+DROP TABLE IF EXISTS "HMM_Data";
+CREATE TABLE "HMM_Data" (
+	 "HMM_Model" text(35,0) NOT NULL,
+	 "HMM_Family" TEXT(35,0),
+	PRIMARY KEY("HMM_Model")
+);
 
 -- ----------------------------
 --  Table structure for HMM_Hits
@@ -29,7 +39,8 @@ CREATE TABLE "HMM_Hits" (
 	 "HMM_To" integer(4,0) NOT NULL,
 	 "HMM_Coverage" real(2,10) NOT NULL,
 	PRIMARY KEY("Hit_HASH"),
-	CONSTRAINT "fk_Proteins" FOREIGN KEY ("Protein_Accession") REFERENCES "Proteins" ("Protein_Accession") ON DELETE CASCADE ON UPDATE CASCADE
+	CONSTRAINT "fk_Proteins" FOREIGN KEY ("Protein_Accession") REFERENCES "Proteins" ("Protein_Accession") ON DELETE CASCADE ON UPDATE CASCADE,
+	CONSTRAINT "fk_HMM_Data" FOREIGN KEY ("HMM_Model") REFERENCES "HMM_Data" ("HMM_Model") ON DELETE CASCADE ON UPDATE CASCADE
 );
 
 -- ----------------------------
