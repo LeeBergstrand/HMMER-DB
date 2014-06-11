@@ -12,6 +12,7 @@ Software for searching, extracting and storing proteins that match specific Hidd
 
 Optionally we have also included a table called HMM_Data that lets you group certain HMMs into families.
 
-Once the the database is setup one can easily query it using  SQL to gather information about a protein's or group of proteins' potential distribution across multiple taxon. We have also included a few R scripts to help with visualization. 
+Once the the database is setup one can easily query it using  SQL to gather information about a protein's or group of proteins' potential distribution across multiple taxon. We have also included a few R scripts to help with visualization. Here is an example:
+
 ![ExampleChart](https://raw.githubusercontent.com/LeeBergstrand/HMMER-DB/master/Media/ExampleChart.jpg)
 
