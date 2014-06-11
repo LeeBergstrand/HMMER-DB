@@ -16,3 +16,11 @@ Once the the database is setup one can easily query it using  SQL to gather info
 
 ![ExampleChart](https://raw.githubusercontent.com/LeeBergstrand/HMMER-DB/master/Media/ExampleChart.jpg)
 
+How to use:
+-----------
+
+To set up the database is a three part process. 
+
+1. Run **GenbankToFASTAandOrganismTable.py** on a series of Genbank files containing the organisms you wish to search with your HMMs.
+2. Run **SearchExtractLoad.py** on the resulting FASTA files and csv table from **GenbankToFASTAandOrganismTable.py**, to run hmmsearch, extract hits and load all the hits and other the information into the database.
+3. Query to your heart's content.
