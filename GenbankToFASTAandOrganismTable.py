@@ -1,4 +1,4 @@
-#!/usr/bin/env pypy 
+#!/usr/bin/env python 
 # Created by: Lee Bergstrand 
 # Descript: A program that extracts the protiens annotations from a genbank file and as well as some 
 #			information about the organism in the file. Stores the protein annotations as a Fasta. 
