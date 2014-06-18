@@ -53,6 +53,7 @@ CREATE TABLE "Organisms" (
 	 "Organism_Description" text(300,0) NOT NULL,
 	 "Source" text(300,0) NOT NULL,
 	 "Organism_Phylogeny" text(300,0) NOT NULL,
+	 "Sequence_Length" integer(13631488,0),
 	PRIMARY KEY("Organism_Accession")
 );
 
