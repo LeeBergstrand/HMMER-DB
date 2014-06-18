@@ -22,7 +22,7 @@ from os import path
 # 1: Checks if in proper number of arguments are passed gives instructions on proper use.
 def argsCheck(numArgs):
 	if len(sys.argv) < numArgs or len(sys.argv) > numArgs:
-		print "Sequence Downloader"
+		print "Extracts annotation information and organism info from a genbank file."
 		print "By Lee Bergstrand\n"
 		print "Usage: " + sys.argv[0] + " <organism.gbk>"
 		print "Examples: " + sys.argv[0] + " ecoli.gbk"
@@ -124,7 +124,7 @@ except IOError:
 	print "Failed to open " + FastaFile
 	sys.exit(1)
 
-# Write annotations to FASTA.	
+# Appends to organism CSV.	
 try:
 	print ">> Writing to organism info to CSV file..."
 	FASTAWriter = open("OrganismDB.csv", "a")
