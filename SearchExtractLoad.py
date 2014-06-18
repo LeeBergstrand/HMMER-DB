@@ -145,8 +145,8 @@ def getHitProteins(HMMHitTable, AnnotationFASTADict, OrganismName):
 #-----------------------------------------------------------------------------------------------------------
 # 7: Inserts organism info into DB.
 def insertOrganismInfo(cursor, OrganismInfo):
-	cursor.execute('''INSERT OR REPLACE INTO Organisms(Organism_Accession, Accession_Type, Organism_Description, Source, Organism_Phylogeny)
-			          VALUES(?,?,?,?,?)''', OrganismInfo)
+	cursor.execute('''INSERT OR REPLACE INTO Organisms(Organism_Accession, Accession_Type, Organism_Description, Source, Organism_Phylogeny, Sequence_Length)
+			          VALUES(?,?,?,?,?,?)''', OrganismInfo)
 #-----------------------------------------------------------------------------------------------------------
 # 8: Inserts protein info into DB.
 def insertProteins(cursor, HitProteins):

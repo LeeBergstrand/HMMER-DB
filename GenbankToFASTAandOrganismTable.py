@@ -113,7 +113,7 @@ else:
 	accessionType = 'Unknown'
 source = record.annotations['source'].replace(",", "")
 taxonomy = "_".join(record.annotations['taxonomy'])
-OrganismString = OrganismID + "," + accessionType + "," + description + "," + source + "," + taxonomy + "," + OrganismGenomeLength + "\n"
+OrganismString = OrganismID + "," + accessionType + "," + description + "," + source + "," + taxonomy + "," + str(OrganismGenomeLength) + "\n"
 
 # Write annotations to FASTA file.
 try:
