@@ -127,20 +127,20 @@ def getHitProteins(HMMHitTable, AnnotationFASTADict, OrganismName):
 
 		Locus = LocusRegex.search(ProteinFASTA).group(0)
 		Locus = Locus.split()[1].rstrip(")")
-	try:
-		LocationData = LocationRegex.search(ProteinFASTA)
-		Start  = LocationData.group(1)
-		End    = LocationData.group(2)
-		Strand = LocationData.group(3)
-		ProteinData = [ProteinAccession, OrganismName, Locus, Start, End, Strand, ProteinFASTA]
-		HitProteins.append(ProteinData)
-	except AttributeError as Error:
-		print row
-		print ProteinFASTA
-		print LocationData
-		print "This is the organism: ", OrganismName
-		print "The AttributeError was ", str(Error)
-		sys.exit(1)
+		try:
+			LocationData = LocationRegex.search(ProteinFASTA)
+			Start  = LocationData.group(1)
+			End    = LocationData.group(2)
+			Strand = LocationData.group(3)
+			ProteinData = [ProteinAccession, OrganismName, Locus, Start, End, Strand, ProteinFASTA]
+			HitProteins.append(ProteinData)
+		except AttributeError as Error:
+			print row
+			print ProteinFASTA
+			print LocationData
+			print "This is the organism: ", OrganismName
+			print "The AttributeError was ", str(Error)
+			sys.exit(1)
 	return HitProteins
 #-----------------------------------------------------------------------------------------------------------
 # 7: Inserts organism info into DB.
@@ -255,7 +255,7 @@ HitProteins = getHitProteins(HMMHitTable, AnnotationFASTADict, OrganismName) # G
 
 if path.isfile(sqlFile):
 	try:
-		HMMDB = sqlite3.connect(sqlFile, timeout = 600)
+		HMMDB = sqlite3.connect(sqlFile, timeout = 3600)
 		print ">> Opened database successfully."
 		cursor = HMMDB.cursor()
 		

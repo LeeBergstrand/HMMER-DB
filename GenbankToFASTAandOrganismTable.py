@@ -40,6 +40,7 @@ def getProtienAnnotationFasta(seqRecord):
 			
 			start  = str(feature.location.start)
 			end    = str(feature.location.end)
+			
 			strand = feature.location.strand
 			if strand == None:
 				strand = "?"
@@ -49,8 +50,9 @@ def getProtienAnnotationFasta(seqRecord):
 				strand =  "+"
 			else:
 				strand = "?"
-			location = "[" + start + ":" + end + "](" + strand + ")"
-
+			
+			location = "[" + start + ":" + end + "](" + strand + ")"
+			
 			# Gets the required qualifers. Uses featQualifers.get to return the quatifer or a default value if the quatifer
 			# is not found. Calls strip to remove unwanted brackets and ' from quantifer before storing it as a string.
 			protein_id = str(featQualifers.get('protein_id','no_protein_id')).strip('\'[]')
@@ -97,8 +99,7 @@ except IOError:
 	sys.exit(1)
 	
 print ">> Extracting Protein Annotations..."
-FASTA = getProtienAnnotationFasta(record) # Creates a dictionary containing all protein annotations in the gbk file.
-OrganismGenomeLength = len(record.seq)
+FASTA = getProtienAnnotationFasta(record) # Creates a string containing all protein annotations in the gbk file.
 
 print ">> Extracting Organism Info..."
 description = record.description.replace(",", "")
@@ -113,9 +114,11 @@ else:
 	accessionType = 'Unknown'
 source = record.annotations['source'].replace(",", "")
 taxonomy = "_".join(record.annotations['taxonomy'])
+OrganismGenomeLength = len(record.seq)
+
 OrganismString = OrganismID + "," + accessionType + "," + description + "," + source + "," + taxonomy + "," + str(OrganismGenomeLength) + "\n"
 
-# Write annotations to FASTA file.
+# Writes annotations to FASTA file.
 try:
 	print ">> Writing FASTA File..."
 	FASTAWriter = open(FastaFile, "w")
