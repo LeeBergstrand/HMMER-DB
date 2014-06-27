@@ -22,7 +22,7 @@ init_extensions(HMMDB) # Required to use some math functions such as median in S
 data = dbGetQuery(HMMDB, "/* # SQL Outer Query: Takes the median number of distinct HMM families per organism source per user definded Phylogeny substring. */
                           SELECT
                               median (subQuery.HMM_Family_Count) AS Completeness,
-                              substr(subQuery.Phylogeny, 0, 16) AS Phylogeny /* Feather the 16 to change the Phylogeny; Less:HigherTaxa <-> Greater:LowerTaxa */
+                              substr(subQuery.Phylogeny, 0, 16) AS Phylogeny /* Feather the 16 to change the Phylogeny: Less:HigherTaxa <-> Greater:LowerTaxa */
                           FROM
                             (
                               /* SQL Inner Query: Counts the number of distinct HMM families per organism source. */
