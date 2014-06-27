@@ -47,7 +47,7 @@ data = dbGetQuery(HMMDB, "SELECT
 head(data) # Note: The columns may wrap to the next line.
 ```
 
-#### We can then use ggplot to plot  E-value distribution of the HMM Hits for HMM families in the database:
+#### We can then use ggplot to plot the E-value distribution of the HMM Hits for HMM families in the database:
 ```{r fig.width = 10, fig.height = 25}
 # Plots Data as a bar graph.
 plotObj = ggplot(data, aes(x = HMM_E_Value, y = HMM_Model, colour = factor(HMM_Family)))
