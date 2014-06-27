@@ -57,9 +57,10 @@ SupplementaryScripts/*.faa
 SupplementaryScripts/*.csv
 TestDBs/
 
+# R Stuff
 .Rhistory
 .RData
 .Rapp.history
-Visualization/*.md
-Visualization/*.html
-Visualization/figure
+Visualization/*/*.md
+Visualization/*/*.html
+Visualization/*/figure

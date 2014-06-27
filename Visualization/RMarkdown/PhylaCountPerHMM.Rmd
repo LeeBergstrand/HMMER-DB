@@ -15,6 +15,7 @@ HMMDB  = dbConnect(sqlite, "/Users/lee/Dropbox/RandD/Repositories/HMMER-DB/TestD
 
 #### The code below queries the database and loads the results of the query into a R dataframe. Please note the substr() function in the SQL. It is what allows us to select what phylogenetic level we want to explore.
 ```{r}
+# Executes SQL query and loads results directly into a dataframe.
 data = dbGetQuery(HMMDB, "SELECT
                               HMM_Data.HMM_Family,
                               count(DISTINCT Organisms.Source) AS Organism_Count,
