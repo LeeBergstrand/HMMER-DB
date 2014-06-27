@@ -4,7 +4,7 @@
 #             
 # Requirements: ggplot2, scales and RSQLite
 #-----------------------------------------------------------------------------
-#Imports:
+# Imports:
 library(ggplot2)
 library(scales)
 library(RSQLite)
@@ -34,7 +34,7 @@ data = dbGetQuery(HMMDB, "SELECT
 	                          HMM_Hits.HMM_Model = HMM_Data.HMM_Model
                             AND HMM_Hits.HMM_Coverage > 0.50") # Coverage filter 
 
-# Plots Data as a bar graph.
+# Plots Data as a point graph.
 plotObj = ggplot(data, aes(x = HMM_E_Value, y = HMM_Model, colour = factor(HMM_Family)))
 plotObj + geom_point(alpha = 1/10) + scale_x_continuous(trans = reverselog_trans(10)) + 
           facet_grid(HMM_Family ~ ., scales = "free") + theme_bw() + 

@@ -1,7 +1,7 @@
-Count the number of HMM hits per HMM family per Phylum in HMMER-DB.
-====================================================================
+Count the number of HMM hits per HMM family per taxa in HMMER-DB.
+=================================================================
 ```{r message = FALSE}
-#Imports:
+# Imports:
 library(ggplot2)
 library(RSQLite)
 ```
@@ -44,9 +44,12 @@ data = dbGetQuery(HMMDB, "/* SQL Query: Counts the number of distinct HMM famili
 head(data) # Note: The columns may wrap to the next line.
 ```
 
-#### We can then use ggplot to plot the number of organisms with hits for particular HMM families in the database:
+#### We can then use ggplot to plot the number of hits for each HMM family within each phylum in the database:
 ```{r fig.width = 20, fig.height = 6}
 # Plots data as a point graph.
 plotObj = ggplot(data, aes(x = HMM_Family, y = Count, colour = factor(Phylum), size = 3))
-plotObj + geom_point() + facet_grid(Phylum ~ ., scales = "free")
+plotObj + geom_point() + facet_grid(Phylum ~ ., scales = "free") +
+          theme(legend.position = "none", axis.text.x = element_text(angle = 45, hjust = 1)) + 
+          ggtitle("Number of hits for HMM families in each phylum in the database.") + 
+          ylab("Hit Count") + xlab("HMM Family")
 ```

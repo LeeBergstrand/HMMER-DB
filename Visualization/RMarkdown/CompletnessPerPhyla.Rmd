@@ -1,7 +1,7 @@
 Find the number of hmm families with hits per taxa in HMMER-DB.
 ==============================================================
 ```{r message = FALSE}
-#Imports:
+# Imports:
 library(ggplot2)
 library(RSQLite)
 library(RSQLite.extfuns)
