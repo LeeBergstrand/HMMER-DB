@@ -129,8 +129,8 @@ def getHitProteins(HMMHitTable, AnnotationFASTADict, OrganismName):
 		Locus = Locus.split()[1].rstrip(")")
 		try:
 			LocationData = LocationRegex.search(ProteinFASTA)
-			Start  = LocationData.group(1)
-			End    = LocationData.group(2)
+			Start  = int(LocationData.group(1))
+			End    = int(LocationData.group(2))
 			Strand = LocationData.group(3)
 			ProteinData = [ProteinAccession, OrganismName, Locus, Start, End, Strand, ProteinFASTA]
 			HitProteins.append(ProteinData)

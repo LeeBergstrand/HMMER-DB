@@ -1,0 +1,117 @@
+Find the number of hmm families with hits per taxa in HMMER-DB.
+==============================================================
+```{r message = FALSE}
+# Imports:
+library(ggplot2)
+library(RSQLite)
+library(RSQLite.extfuns)
+```
+
+#### We can query the HMMER-DB database using a SQL query within R. Our first step is to setup a database connection:
+```{r message = FALSE}
+# Setting up database connection:
+sqlite = dbDriver("SQLite")
+HMMDB  = dbConnect(sqlite, "/Users/lee/Dropbox/RandD/Repositories/HMMER-DB/TestDBs/TestDB.sqlite") # Location of HMMER-DB Sqlite database.
+init_extensions(HMMDB) # Required to use some math functions such as median in Sqlite.
+```
+
+### Lets say we want to find the median number of hmm familes with hits per phyla in the database:
+#### The code below queries the database and loads the results of the query into a R dataframe. Please note the substr() function in the SQL. It is what allows us to select what phylogenetic level we want to explore.
+```{r}
+# Executes SQL query and loads results directly into a dataframe.
+data = dbGetQuery(HMMDB, "/* # SQL Outer Query: Takes the median number of distinct HMM families per organism source per user definded Phylogeny substring. */
+                          SELECT
+                              median (subQuery.HMM_Family_Count) AS Completeness,
+                              substr(subQuery.Phylogeny, 0, 16) AS Phylogeny /* Feather the 16 to change the Phylogeny: Less:HigherTaxa <-> Greater:LowerTaxa */
+                          FROM
+                            (
+                              /* SQL Inner Query: Counts the number of distinct HMM families per organism source. */
+                              SELECT
+                                  count(DISTINCT HMM_Data.HMM_Family) AS HMM_Family_Count,
+                                  Organisms.Organism_Phylogeny AS Phylogeny
+                              FROM
+                                  HMM_Data,
+                                  HMM_Hits,
+                                  Organisms,
+                                  Proteins
+                              WHERE
+                                  HMM_Data.HMM_Model = HMM_Hits.HMM_Model
+                              AND HMM_Hits.Protein_Accession = Proteins.Protein_Accession
+                              AND Proteins.Organism_Accession = Organisms.Organism_Accession
+                              GROUP BY
+                                  Organisms.Source
+                              ORDER BY
+                                  HMM_Family_Count
+                            ) AS subQuery
+                          GROUP BY
+                              Phylogeny
+                          ORDER BY
+                              Phylogeny")
+```
+
+#### We now check if the SQL query is generating the dataframe we want:
+```{r}
+head(data) # Note: The columns may wrap to the next line.
+```
+
+#### We can then use ggplot to plot the median number of proteins with hits for each phylum in the database:
+```{r fig.width = 15, fig.height = 6}
+# Plots Data as a bar graph.
+plotObj = ggplot(data, aes(x = Phylogeny, y = Completeness, fill = Phylogeny))
+plotObj + geom_bar(stat="identity") + coord_flip() +
+          ggtitle("Median completeness (number of proteins with hits) for phyla in the database.") + 
+          ylab("Median completeness (number of proteins with hits)") + xlab("Phyla") + theme(legend.position = "none")
+```
+
+### Lets say we want to find the median number of hmm familes with hits down to a genus level but only for bacteria (Also the genus must have a HMM family completeness of greater than 60%):
+#### The code below queries the database and loads the results of the query into a R dataframe. Please note the substr() functions in the SQL that allow us to select what phylogenetic level we want to explore as well as change what taxa levels are coloured and are on the legend.
+```{r}
+# Executes SQL query and loads results directly into a dataframe.
+dataTwo = dbGetQuery(HMMDB, "/* SQL Outer Query: Takes the median number of distinct HMM families per organism source per user definded Phylogeny substring. */
+                          SELECT
+                              median (subQuery.HMM_Family_Count) AS Completeness,
+                              substr(subQuery.Phylogeny, 0, 300) AS Phylogeny, /* Feather the 300 to change the Phylogeny; Less:HigherTaxa <-> Greater:LowerTaxa */
+                              substr(subQuery.Phylogeny, 25, 15) AS Phylum /* Feather the 25/15 to change what taxonomic levels are coloured and on the legend */
+                          FROM
+                            (
+                              /* SQL Inner Query: Counts the number of distinct HMM families per organism source. */
+                              SELECT
+                                  count(DISTINCT HMM_Data.HMM_Family) AS HMM_Family_Count,
+                                  Organisms.Organism_Phylogeny AS Phylogeny
+                              FROM
+                                  HMM_Data,
+                                  HMM_Hits,
+                                  Organisms,
+                                  Proteins
+                              WHERE
+                                  HMM_Data.HMM_Model = HMM_Hits.HMM_Model
+                              AND HMM_Hits.Protein_Accession = Proteins.Protein_Accession
+                              AND Proteins.Organism_Accession = Organisms.Organism_Accession
+                              GROUP BY
+                                  Organisms.Source
+                              ORDER BY
+                                  HMM_Family_Count
+                            ) AS subQuery
+                          WHERE
+                              Phylogeny LIKE '%Bacteria%' /* Use this to filter by specific Phylogeny */
+                          GROUP BY
+                              Phylogeny
+                          HAVING
+                              Completeness >= 13.8 /* Use this to filter by specific completeness (Depends on dataset) */
+                          ORDER BY
+                              Phylogeny")
+```
+
+#### We now check if the SQL query is generating the dataframe we want:
+```{r}
+head(dataTwo) # Note: The columns may wrap to the next line.
+```
+
+#### We can then use ggplot to plot the median number of proteins with hits for each bacterial genus in the database:
+```{r fig.width = 20, fig.height = 6}
+# Plots Data as a bar graph.
+plotObj = ggplot(dataTwo, aes(x = Phylogeny, y = Completeness, fill = Phylum))
+plotObj + geom_bar(stat="identity") + coord_flip() +
+          ggtitle("Bacterial genera with a median completeness (number of proteins with hits) greater than 60%.") + 
+          ylab("Median completeness (number of proteins with hits)") + xlab("Phyla") + labs(fill = "Class") 
+```

@@ -1,0 +1,52 @@
+Find the number of organisms with hits for particular HMM families in HMMER-DB.
+===============================================================================
+```{r message = FALSE}
+# Imports:
+library(ggplot2)
+library(RSQLite)
+```
+
+#### We can query the HMMER-DB database using a SQL query within R. Our first step is to setup a database connection:
+```{r message = FALSE}
+# Setting up database connection:
+sqlite = dbDriver("SQLite")
+HMMDB  = dbConnect(sqlite, "/Users/lee/Dropbox/RandD/Repositories/HMMER-DB/TestDBs/TestDB.sqlite") # Location of HMMER-DB Sqlite database.
+```
+
+#### The code below queries the database and loads the results of the query into a R dataframe. Please note the substr() function in the SQL. It is what allows us to select what phylogenetic level we want to explore.
+```{r}
+# Executes SQL query and loads results directly into a dataframe.
+data = dbGetQuery(HMMDB, "SELECT
+                              HMM_Data.HMM_Family,
+                              count(DISTINCT Organisms.Source) AS Organism_Count,
+	                            substr(Organisms.Organism_Phylogeny,0,8) AS Kingdom  /* Feather the 8 to change the Phylogeny: Less:HigherTaxa <-> Greater:LowerTaxa */
+                          FROM
+	                            HMM_Data,
+	                            HMM_Hits,
+	                            Organisms,
+	                            Proteins
+                          WHERE
+	                            HMM_Data.HMM_Model = HMM_Hits.HMM_Model
+                          AND HMM_Hits.Protein_Accession = Proteins.Protein_Accession
+                          AND Proteins.Organism_Accession = Organisms.Organism_Accession
+                          GROUP BY
+	                            Kingdom,
+	                            HMM_Data.HMM_Family
+                          ORDER BY
+	                            HMM_Data.HMM_Family,
+	                            Organism_Count DESC")
+```
+
+#### We now check if the SQL query is generating the dataframe we want:
+```{r}
+head(data) # Note: The columns may wrap to the next line.
+```
+
+#### We can then use ggplot to plot the number of organisms with hits for particular HMM families in the database:
+```{r fig.width = 15, fig.height = 6}
+# Plots Data as a bar graph.
+plotObj = ggplot(data, aes(x = HMM_Family, y = Organism_Count, fill = Kingdom))
+plotObj + geom_bar(stat = "identity", position = "identity") + coord_flip() +
+          ggtitle("Number of organisms with hits for particular HMM families for each Kingdom") + 
+          ylab("Number of organisms with hits.") + xlab("HMM Family")
+```

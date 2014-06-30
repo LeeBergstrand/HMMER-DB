@@ -38,9 +38,8 @@ def getProtienAnnotationFasta(seqRecord):
 			featQualifers = feature.qualifiers # Each feature contains a dictionary called quailifiers which contains           
 			                                   # data about the sequence feature (for example the translation)
 			
-			start  = str(feature.location.start)
-			end    = str(feature.location.end)
-			
+			start  = int(feature.location.start) # Type-casting to int strips fuzzy < > characters.
+			end    = int(feature.location.end)
 			strand = feature.location.strand
 			if strand == None:
 				strand = "?"
@@ -51,7 +50,7 @@ def getProtienAnnotationFasta(seqRecord):
 			else:
 				strand = "?"
 			
-			location = "[" + start + ":" + end + "](" + strand + ")"
+			location = "[" + str(start) + ":" + str(end) + "](" + strand + ")"
 			
 			# Gets the required qualifers. Uses featQualifers.get to return the quatifer or a default value if the quatifer
 			# is not found. Calls strip to remove unwanted brackets and ' from quantifer before storing it as a string.

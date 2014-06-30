@@ -1,14 +1,16 @@
 /*
- Navicat SQLite Data Transfer
+ Navicat Premium Data Transfer
 
  Source Server         : RawDB
+ Source Server Type    : SQLite
  Source Server Version : 3008004
  Source Database       : main
 
+ Target Server Type    : SQLite
  Target Server Version : 3008004
  File Encoding         : utf-8
 
- Date: 06/10/2014 14:45:40 PM
+ Date: 06/24/2014 14:16:14 PM
 */
 
 PRAGMA foreign_keys = false;
@@ -53,7 +55,7 @@ CREATE TABLE "Organisms" (
 	 "Organism_Description" text(300,0) NOT NULL,
 	 "Source" text(300,0) NOT NULL,
 	 "Organism_Phylogeny" text(300,0) NOT NULL,
-	 "Sequence_Length" integer(13631488,0),
+	 "Sequence_Length" integer(13631488,0) NOT NULL DEFAULT NULL,
 	PRIMARY KEY("Organism_Accession")
 );
 
@@ -65,9 +67,9 @@ CREATE TABLE "Proteins" (
 	 "Protein_Accession" text(25,0) NOT NULL,
 	 "Organism_Accession" text(25,0) NOT NULL,
 	 "Locus" text(25,0) NOT NULL,
-	 "Start" integer(300,0) NOT NULL,
-	 "End" integer(300,0) NOT NULL,
-	 "Strand" integer(1,0) NOT NULL,
+	 "Start" integer(13631488,0) NOT NULL,
+	 "End" integer(13631488,0) NOT NULL,
+	 "Strand" text(1,0) NOT NULL,
 	 "FASTA_Sequence" text(5500,0) NOT NULL,
 	PRIMARY KEY("Protein_Accession"),
 	CONSTRAINT "fk_Organisms" FOREIGN KEY ("Organism_Accession") REFERENCES "Organisms" ("Organism_Accession") ON DELETE CASCADE ON UPDATE CASCADE

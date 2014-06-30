@@ -1,0 +1,55 @@
+Count the number of HMM hits per HMM family per taxa in HMMER-DB.
+=================================================================
+```{r message = FALSE}
+# Imports:
+library(ggplot2)
+library(RSQLite)
+```
+
+#### We can query the HMMER-DB database using a SQL query within R. Our first step is to setup a database connection:
+```{r message = FALSE}
+# Setting up database connection:
+sqlite = dbDriver("SQLite")
+HMMDB  = dbConnect(sqlite, "/Users/lee/Dropbox/RandD/Repositories/HMMER-DB/TestDBs/TestDB.sqlite") # Location of HMMER-DB Sqlite database.
+```
+
+#### The code below queries the database and loads the results of the query into a R dataframe. Please note the substr() function in the SQL. It is what allows us to select what phylogenetic level we want to explore.
+```{r}
+# Executes SQL query and loads results directly into a dataframe.
+data = dbGetQuery(HMMDB, "/* SQL Query: Counts the number of distinct HMM families per organism source. */
+                          SELECT
+                              HMM_Data.HMM_Family,
+                              count(HMM_Data.HMM_Family) AS Count,
+	                            substr(Organisms.Organism_Phylogeny,0,18) AS Phylum /* Feather the 18 to change the Phylogeny; Less:HigherTaxa <-> Greater:LowerTaxa */
+                          FROM
+	                            HMM_Data,
+	                            HMM_Hits,
+	                            Organisms,
+	                            Proteins
+                          WHERE
+	                            HMM_Data.HMM_Model = HMM_Hits.HMM_Model
+                          AND HMM_Hits.Protein_Accession = Proteins.Protein_Accession
+                          AND Proteins.Organism_Accession = Organisms.Organism_Accession
+                          AND Organisms.Organism_Phylogeny LIKE 'Bacteria%' /* Use this to filter by specific Phylogeny */
+                          GROUP BY
+	                            HMM_Data.HMM_Family,
+	                            Phylum
+                          ORDER BY
+	                            Phylum")
+
+```
+
+#### We now check if the SQL query is generating the dataframe we want:
+```{r}
+head(data) # Note: The columns may wrap to the next line.
+```
+
+#### We can then use ggplot to plot the number of hits for each HMM family within each phylum in the database:
+```{r fig.width = 20, fig.height = 6}
+# Plots data as a point graph.
+plotObj = ggplot(data, aes(x = HMM_Family, y = Count, colour = factor(Phylum), size = 3))
+plotObj + geom_point() + facet_grid(Phylum ~ ., scales = "free") +
+          theme(legend.position = "none", axis.text.x = element_text(angle = 45, hjust = 1)) + 
+          ggtitle("Number of hits for HMM families in each phylum in the database.") + 
+          ylab("Hit Count") + xlab("HMM Family")
+```
