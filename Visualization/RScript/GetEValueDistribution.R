@@ -9,7 +9,7 @@ library(ggplot2)
 library(scales)
 library(RSQLite)
 
-#Functions:
+# Functions One: Creates a scale function for a reverse logarithmic scale.
 reverselog_trans = function(base = exp(1)) 
 {
   trans = function(x) -log(x, base)

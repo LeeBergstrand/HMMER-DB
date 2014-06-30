@@ -1,5 +1,5 @@
-Find the E-value distribution of the HMM Hits for HMM families in HMMER-DB.
-===========================================================================
+Find the E-value distribution of HMM Hits for HMM families in HMMER-DB.
+=======================================================================
 ```{r message = FALSE}
 # Imports:
 library(ggplot2)
