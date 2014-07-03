@@ -10,7 +10,7 @@ library(RSQLite)
 ```{r}
 # Setting up database connection:
 sqlite = dbDriver("SQLite")
-HMMDB  = dbConnect(sqlite, "/Users/lee/Dropbox/RandD/Repositories/HMMER-DB/TestDBs/TestDB.sqlite") # Location of HMMER-DB Sqlite database.
+HMMDB  = dbConnect(sqlite, "/Users/lee/Data/SteriodHMMs/HMMDBV2.sqlite") # Location of HMMER-DB Sqlite database.
 ```
 #### The code below queries the database and loads the results of the query into a R dataframe (Note: This is a rather complex query with multiple filters). 
 ```{r}
@@ -106,7 +106,7 @@ head(data) # Note: The final column may wrap to the next line.
 ```
 
 #### We can then use ggplot to plot the relative positions of HMM hits in the genomes of the organisms in the database:
-```{r fig.width = 15, fig.height = 6}
+```{r fig.width = 18, fig.height = 18}
 plotObj = ggplot(data, aes(x = Protein_Relative_Center, y = Organism_Description, color = factor(HMM_Family)))
 plotObj + geom_point(alpha = 3/4) + # Slight alpha so one can visualize overlaping points better.
           ggtitle("Relative positions of proteins with HMM hits for organisms in the database.") + 
@@ -116,7 +116,7 @@ plotObj + geom_point(alpha = 3/4) + # Slight alpha so one can visualize overlapi
 *Please note that most bacterial genomes are circular and the genome may start at an arbitrary point.*
 
 #### We can also use ggplot to plot the relative density of HMM hits in the genomes of the organisms in the database:
-```{r fig.width = 15, fig.height = 6}
+```{r fig.width = 18, fig.height = 18}
 plotObj = ggplot(data, aes(x = Protein_Relative_Center, y = Organism_Description, fill = 'black'))
 plotObj + geom_point(alpha = 1/4) + # Proteins are all the same color and we use alpha to highlight areas with a greater number of hit proteins.
           ggtitle("Relative density of proteins with HMM hits for organisms in the database.") + 
@@ -135,7 +135,7 @@ head(dataTwo) # Note: The final column may wrap to the next line.
 ```
 
 #### We again use ggplot to plot the relative positions of HMM hits in the genomes of the organisms in the database but now only for HsaC and KshA:
-```{r fig.width = 15, fig.height = 6}
+```{r fig.width = 18, fig.height = 18}
 plotObj = ggplot(dataTwo, aes(x = Protein_Relative_Center, y = Organism_Description, color = factor(HMM_Family)))
 plotObj + geom_point(alpha = 3/4) + # Slight alpha so one can visualize overlaping points better.
           ggtitle("Relative positions of proteins with HMM hits for organisms in the database.") + 

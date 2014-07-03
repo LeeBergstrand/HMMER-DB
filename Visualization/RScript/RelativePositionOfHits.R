@@ -11,7 +11,7 @@ library(RSQLite)
 
 # Setting up database connection:
 sqlite = dbDriver("SQLite")
-HMMDB  = dbConnect(sqlite, "/Users/lee/Dropbox/RandD/Repositories/HMMER-DB/TestDBs/TestDB.sqlite") # Location of HMMER-DB Sqlite database.
+HMMDB  = dbConnect(sqlite, "/Users/lee/Data/SteriodHMMs/HMMDBV2.sqlite") # Location of HMMER-DB Sqlite database.
 
 # Executes SQL query and loads results directly into a dataframe. 
 data = dbGetQuery(HMMDB, "/* SQL Outer Query: Wrapper for subquery one that calculates relative protein center from subquery one's relative protein start and stop.*/
@@ -97,6 +97,8 @@ data = dbGetQuery(HMMDB, "/* SQL Outer Query: Wrapper for subquery one that calc
                           		AND HMM_Data.HMM_Family NOT LIKE '%Cyp%' /* Filters out Cyps */
                           		AND HMM_Hits.HMM_Coverage >= 0.8
                           	) AS subQuery")
+print("Alah Spam")
+
 
 plotObj = ggplot(data, aes(x = Protein_Relative_Center, y = Organism_Description, color = factor(HMM_Family)))
 plotObj + geom_point(alpha = 3/4) + # Slight alpha so one can visualize overlaping points better.

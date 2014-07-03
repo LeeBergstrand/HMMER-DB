@@ -24,7 +24,7 @@ reverselog_trans = function(base = exp(1))
 ```{r message = FALSE}
 # Setting up database connection:
 sqlite = dbDriver("SQLite")
-HMMDB  = dbConnect(sqlite, "/Users/lee/Dropbox/RandD/Repositories/HMMER-DB/TestDBs/TestDB.sqlite") # Location of HMMER-DB Sqlite database.
+HMMDB  = dbConnect(sqlite, "/Users/lee/Data/SteriodHMMs/HMMDBV2.sqlite") # Location of HMMER-DB Sqlite database.
 ```
 
 #### The code below queries the database and loads the results of the query into a R dataframe. Please note the substr() function in the SQL. It is what allows us to select what phylogenetic level we want to explore.
