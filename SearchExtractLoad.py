@@ -95,7 +95,7 @@ def parseHmmsearchResults(HMMResults, HMMName, HMMLength):
 # 6: Fitres HMM Hits.
 def filterHMMHitTable(HMMHitTable):
 
-	HMMHitTable = [row for row in HMMHitTable if row[3] < float("1e-30")] # Filtres by E-value.
+	HMMHitTable = [row for row in HMMHitTable if row[3] < float("1e-25")] # Filtres by E-value.
 	
 	i = 0
 	while i < (len(HMMHitTable)-1):
@@ -114,7 +114,7 @@ def filterHMMHitTable(HMMHitTable):
 						HMMHitTable.remove(RowOne)
 					i = i - 1 # Resets list index.
 		i += 1
-			
+		
 	HMMHitTable = [row for row in HMMHitTable if row[-1] > 0.3] # Filtres by Query Coverage.
 	return	HMMHitTable		
 #------------------------------------------------------------------------------------------------------------
@@ -275,4 +275,4 @@ if path.isfile(sqlFile):
 else:
 	print "Failed to open " + sqlFile
 	sys.exit(1)
-print ">> Done!"
+print ">> Done!" 
