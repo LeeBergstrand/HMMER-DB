@@ -11,7 +11,7 @@ library(RSQLite.extfuns)
 ```{r message = FALSE}
 # Setting up database connection:
 sqlite = dbDriver("SQLite")
-HMMDB  = dbConnect(sqlite, "/Users/lee/Dropbox/RandD/Repositories/HMMER-DB/TestDBs/TestDB.sqlite") # Location of HMMER-DB Sqlite database.
+HMMDB  = dbConnect(sqlite, "/Users/lee/Data/SteriodHMMs/HMMDBV3.sqlite") # Location of HMMER-DB Sqlite database.
 init_extensions(HMMDB) # Required to use some math functions such as median in Sqlite.
 ```
 
@@ -55,7 +55,7 @@ head(data) # Note: The columns may wrap to the next line.
 ```
 
 #### We can then use ggplot to plot the median number of proteins with hits for each phylum in the database:
-```{r fig.width = 15, fig.height = 6}
+```{r fig.width = 15, fig.height = 10}
 # Plots Data as a bar graph.
 plotObj = ggplot(data, aes(x = Phylogeny, y = Completeness, fill = Phylogeny))
 plotObj + geom_bar(stat="identity") + coord_flip() +
@@ -108,7 +108,7 @@ head(dataTwo) # Note: The columns may wrap to the next line.
 ```
 
 #### We can then use ggplot to plot the median number of proteins with hits for each bacterial genus in the database:
-```{r fig.width = 20, fig.height = 6}
+```{r fig.width = 20, fig.height = 15}
 # Plots Data as a bar graph.
 plotObj = ggplot(dataTwo, aes(x = Phylogeny, y = Completeness, fill = Phylum))
 plotObj + geom_bar(stat="identity") + coord_flip() +

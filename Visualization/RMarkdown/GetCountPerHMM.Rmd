@@ -10,8 +10,45 @@ library(RSQLite)
 ```{r message = FALSE}
 # Setting up database connection:
 sqlite = dbDriver("SQLite")
-HMMDB  = dbConnect(sqlite, "/Users/lee/Data/SteriodHMMs/HMMDBV2.sqlite") # Location of HMMER-DB Sqlite database.
+HMMDB  = dbConnect(sqlite, "/Users/lee/Data/SteriodHMMs/HMMDBV3.sqlite") # Location of HMMER-DB Sqlite database.
 ```
+#### The code below queries the database and loads the results of the query into a R dataframe. Please note the substr() function in the SQL. It is what allows us to select what phylogenetic level we want to explore.
+```{r}
+# Executes SQL query and loads results directly into a dataframe.
+data = dbGetQuery(HMMDB, "SELECT
+                              HMM_Hits.HMM_Model,
+                              count(DISTINCT Organisms.Source) AS Organism_Count,
+                              substr(Organisms.Organism_Phylogeny,0,8) AS Domain  /* Feather the 8 to change the Phylogeny: Less:HigherTaxa <-> Greater:LowerTaxa */
+                          FROM
+	                            HMM_Hits,
+	                            Organisms,
+	                            Proteins
+                          WHERE
+                              HMM_Hits.Protein_Accession = Proteins.Protein_Accession
+                          AND Proteins.Organism_Accession = Organisms.Organism_Accession
+                          GROUP BY
+	                            Domain,
+	                            HMM_Hits.HMM_Model
+                          ORDER BY
+	                            HMM_Hits.HMM_Model,
+	                            Organism_Count DESC")
+```
+
+#### We now check if the SQL query is generating the dataframe we want:
+```{r}
+head(data) # Note: The columns may wrap to the next line.
+```
+
+#### We can then use ggplot to plot the number of organisms with hits for particular HMM families in the database:
+```{r fig.width = 15, fig.height = 12}
+# Plots Data as a bar graph.
+plotObj = ggplot(data, aes(x = HMM_Model, y = Organism_Count, fill = Domain))
+plotObj + geom_bar(stat = "identity", position = "identity") + coord_flip() +
+          ggtitle("Number of organisms with hits for particular HMM models for each Domain") + 
+          ylab("Number of organisms with hits.") + xlab("HMM Family")
+```
+
+### Lets group by HMM family for a more concise visualization: 
 
 #### The code below queries the database and loads the results of the query into a R dataframe. Please note the substr() function in the SQL. It is what allows us to select what phylogenetic level we want to explore.
 ```{r}
@@ -19,7 +56,7 @@ HMMDB  = dbConnect(sqlite, "/Users/lee/Data/SteriodHMMs/HMMDBV2.sqlite") # Locat
 data = dbGetQuery(HMMDB, "SELECT
                               HMM_Data.HMM_Family,
                               count(DISTINCT Organisms.Source) AS Organism_Count,
-	                            substr(Organisms.Organism_Phylogeny,0,8) AS Kingdom  /* Feather the 8 to change the Phylogeny: Less:HigherTaxa <-> Greater:LowerTaxa */
+	                            substr(Organisms.Organism_Phylogeny,0,8) AS Domain  /* Feather the 8 to change the Phylogeny: Less:HigherTaxa <-> Greater:LowerTaxa */
                           FROM
 	                            HMM_Data,
 	                            HMM_Hits,
@@ -30,7 +67,7 @@ data = dbGetQuery(HMMDB, "SELECT
                           AND HMM_Hits.Protein_Accession = Proteins.Protein_Accession
                           AND Proteins.Organism_Accession = Organisms.Organism_Accession
                           GROUP BY
-	                            Kingdom,
+	                            Domain,
 	                            HMM_Data.HMM_Family
                           ORDER BY
 	                            HMM_Data.HMM_Family,
@@ -45,8 +82,8 @@ head(data) # Note: The columns may wrap to the next line.
 #### We can then use ggplot to plot the number of organisms with hits for particular HMM families in the database:
 ```{r fig.width = 15, fig.height = 6}
 # Plots Data as a bar graph.
-plotObj = ggplot(data, aes(x = HMM_Family, y = Organism_Count, fill = Kingdom))
+plotObj = ggplot(data, aes(x = HMM_Family, y = Organism_Count, fill = Domain))
 plotObj + geom_bar(stat = "identity", position = "identity") + coord_flip() +
-          ggtitle("Number of organisms with hits for particular HMM families for each Kingdom") + 
+          ggtitle("Number of organisms with hits for particular HMM families for each Domain.") + 
           ylab("Number of organisms with hits.") + xlab("HMM Family")
 ```

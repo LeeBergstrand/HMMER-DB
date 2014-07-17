@@ -10,7 +10,7 @@ library(RSQLite)
 ```{r}
 # Setting up database connection:
 sqlite = dbDriver("SQLite")
-HMMDB  = dbConnect(sqlite, "/Users/lee/Data/SteriodHMMs/HMMDBV2.sqlite") # Location of HMMER-DB Sqlite database.
+HMMDB  = dbConnect(sqlite, "/Users/lee/Data/SteriodHMMs/HMMDBV3.sqlite") # Location of HMMER-DB Sqlite database.
 ```
 #### The code below queries the database and loads the results of the query into a R dataframe (Note: This is a rather complex query with multiple filters). 
 ```{r}
@@ -68,6 +68,7 @@ data = dbGetQuery(HMMDB, "/* SQL Outer Query: Wrapper for subquery one that calc
                           				AND HMM_Hits.Protein_Accession = Proteins.Protein_Accession
                           				AND Organisms.Organism_Accession = Proteins.Organism_Accession
                           				AND HMM_Data.HMM_Family = 'hsaC' /* Selects organisms with a hit for HsaC*/
+                                  AND HMM_Hits.HMM_Coverage >= 0.8 /* Select only hsaC hits with greater than 80% coverage. */
                           				AND Organisms.Organism_Accession IN (
                   
                             				/* SQL Inner Query 4: Selects organisms with hits for KshA */
@@ -83,6 +84,7 @@ data = dbGetQuery(HMMDB, "/* SQL Outer Query: Wrapper for subquery one that calc
                           					AND HMM_Hits.Protein_Accession = Proteins.Protein_Accession
                           					AND Organisms.Organism_Accession = Proteins.Organism_Accession
                           					AND HMM_Data.HMM_Family IN ('KshA') /* Selects organisms with a hit for KshA*/
+                                    AND HMM_Hits.HMM_Coverage >= 0.8 /* Select only KshA hits with greater than 80% coverage. */
                           				)
                           			)
                           			GROUP BY
@@ -95,8 +97,8 @@ data = dbGetQuery(HMMDB, "/* SQL Outer Query: Wrapper for subquery one that calc
                           		AND HMM_Data.HMM_Family NOT LIKE '%FAD%' /* Filters out FADs */
                           		AND HMM_Data.HMM_Family NOT LIKE '%EchA%' /* Filters out EchAs */
                           		AND HMM_Data.HMM_Family NOT LIKE '%hsd4A%' /* Filters out hsd4As */
-                          		AND HMM_Data.HMM_Family NOT LIKE '%Cyp%' /* Filters out Cyps */
-                          		AND HMM_Hits.HMM_Coverage >= 0.8
+                              AND HMM_Data.HMM_Family NOT LIKE '%Cyp%' /* Filters out hsd4As */
+                              AND HMM_Hits.HMM_Coverage >= 0.8 /* Select only hits with greater than 80% coverage. */
                           	) AS subQuery")
 ```
 
@@ -109,7 +111,7 @@ head(data) # Note: The final column may wrap to the next line.
 ```{r fig.width = 18, fig.height = 18}
 plotObj = ggplot(data, aes(x = Protein_Relative_Center, y = Organism_Description, color = factor(HMM_Family)))
 plotObj + geom_point(alpha = 3/4) + # Slight alpha so one can visualize overlaping points better.
-          ggtitle("Relative positions of proteins with HMM hits for organisms in the database.") + 
+          ggtitle("Relative positions of proteins with HMM hits for non-mycobacterium bacteria in the database.") + 
           xlab("Protein's relative postion on geneome.") + ylab("Organism") + labs(colour = "Type of HMM hit") 
 ```
 
