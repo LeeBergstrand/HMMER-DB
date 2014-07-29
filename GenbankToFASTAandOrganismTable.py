@@ -64,6 +64,27 @@ def getProtienAnnotationFasta(seqRecord):
 			fasta.append(">" + protein_id + " " + gene + "-" + product + " (Locus: " + protein_locus + ")" + " (Location: " + location + ")" + "\n" + translated_protein + "\n")
 	FASTAString = "".join(fasta)
 	return FASTAString
+	
+#------------------------------------------------------------------------------------------------------------
+# 4: When passed a sequence record object returns a string containing the organisms info.
+def getOrganismInfo(seqRecord):
+	print ">> Extracting Organism Info..."
+	description = seqRecord.description.replace(",", "")
+	accessionType = ""
+	if 'plasmid' in description.lower():
+		accessionType = 'Plasmid'
+	elif 'chromosome' in description.lower():
+		accessionType = 'Chromosome'
+	elif 'genome' in description.lower():
+		accessionType = 'Chromosome'
+	else:
+		accessionType = 'Unknown'
+	source = seqRecord.annotations['source'].replace(",", "")
+	taxonomy = "_".join(seqRecord.annotations['taxonomy'])
+	OrganismGenomeLength = len(seqRecord.seq)
+
+	OrganismString = OrganismID + "," + accessionType + "," + description + "," + source + "," + taxonomy + "," + str(OrganismGenomeLength) + "\n"
+	return OrganismString
 #------------------------------------------------------------------------------------------------------------
 # Main program code:
 
@@ -99,23 +120,7 @@ except IOError:
 	
 print ">> Extracting Protein Annotations..."
 FASTA = getProtienAnnotationFasta(record) # Creates a string containing all protein annotations in the gbk file.
-
-print ">> Extracting Organism Info..."
-description = record.description.replace(",", "")
-accessionType = ""
-if 'plasmid' in description.lower():
-	accessionType = 'Plasmid'
-elif 'chromosome' in description.lower():
-	accessionType = 'Chromosome'
-elif 'genome' in description.lower():
-	accessionType = 'Chromosome'
-else:
-	accessionType = 'Unknown'
-source = record.annotations['source'].replace(",", "")
-taxonomy = "_".join(record.annotations['taxonomy'])
-OrganismGenomeLength = len(record.seq)
-
-OrganismString = OrganismID + "," + accessionType + "," + description + "," + source + "," + taxonomy + "," + str(OrganismGenomeLength) + "\n"
+OrganismString = getOrganismInfo(record) # Creates a comma seperated string with organism info.
 
 # Writes annotations to FASTA file.
 try:
