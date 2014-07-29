@@ -1,8 +1,7 @@
 #!/usr/bin/env python 
 # Created by: Lee Bergstrand 
 # Descript: A program that extracts the protiens annotations from a genbank file and as well as some 
-#			information about the organism in the file. Stores the protein annotations as a Fasta. 
-#			Appends a csv file with the organism info.
+#			information about the organism in the file. 
 #
 # Requirements: - This script requires the Biopython module: http://biopython.org/wiki/Download
 #
@@ -16,7 +15,6 @@ import sys
 from Bio import SeqIO
 from os import path
 from DBSetFunctions import getProtienAnnotationFasta
-from DBSetFunctions import getOrganismInfo
 
 #===========================================================================================================
 # Functions:
@@ -64,7 +62,6 @@ except IOError:
 	
 print ">> Extracting Protein Annotations..."
 FASTA = getProtienAnnotationFasta(record) # Creates a string containing all protein annotations in the gbk file.
-OrganismString = getOrganismInfo(record) # Creates a comma seperated string with organism info.
 
 # Writes annotations to FASTA file.
 try:
@@ -75,14 +72,3 @@ try:
 except IOError:
 	print "Failed to open " + FastaFile
 	sys.exit(1)
-
-# Appends to organism CSV.	
-try:
-	print ">> Writing to organism info to CSV file..."
-	FASTAWriter = open("OrganismDB.csv", "a")
-	FASTAWriter.write(OrganismString)
-	FASTAWriter.close()
-except IOError:
-	print "Failed to open " + CSVFile
-	sys.exit(1)
-print ">> Done"

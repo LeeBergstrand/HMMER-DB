@@ -1,8 +1,6 @@
 #!/usr/bin/env python 
 # Created by: Lee Bergstrand 
-# Descript: A program that extracts the protiens annotations from a genbank file and as well as some 
-#			information about the organism in the file. Stores the protein annotations as a Fasta. 
-#			Appends a csv file with the organism info.
+# Descript: Appends a csv file with the organism info.
 #
 # Requirements: - This script requires the Biopython module: http://biopython.org/wiki/Download
 #
@@ -15,7 +13,6 @@
 import sys
 from Bio import SeqIO
 from os import path
-from DBSetFunctions import getProtienAnnotationFasta
 from DBSetFunctions import getOrganismInfo
 
 #===========================================================================================================
@@ -29,7 +26,9 @@ def argsCheck(numArgs):
 		print "Usage: " + sys.argv[0] + " <organism.gbk>"
 		print "Examples: " + sys.argv[0] + " ecoli.gbk"
 		sys.exit(1) # Aborts program. (exit(1) indicates that an error occurred)
+
 #------------------------------------------------------------------------------------------------------------
+
 # Main program code:
 
 # House keeping...
@@ -39,7 +38,6 @@ argsCheck(2) # Checks if the number of arguments are correct.
 print ">> Starting up..."
 OrganismFile = sys.argv[1]
 OrganismID = path.split(OrganismFile)[1].rstrip(".gbk")
-FastaFile = OrganismID + ".faa"
 
 # File extension checks
 print ">> Performing file extention checks..."
@@ -63,18 +61,7 @@ except IOError:
 	sys.exit(1)
 	
 print ">> Extracting Protein Annotations..."
-FASTA = getProtienAnnotationFasta(record) # Creates a string containing all protein annotations in the gbk file.
 OrganismString = getOrganismInfo(record) # Creates a comma seperated string with organism info.
-
-# Writes annotations to FASTA file.
-try:
-	print ">> Writing FASTA File..."
-	FASTAWriter = open(FastaFile, "w")
-	FASTAWriter.write(FASTA)
-	FASTAWriter.close()
-except IOError:
-	print "Failed to open " + FastaFile
-	sys.exit(1)
 
 # Appends to organism CSV.	
 try:
