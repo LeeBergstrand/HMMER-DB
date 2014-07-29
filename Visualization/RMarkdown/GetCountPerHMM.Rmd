@@ -10,7 +10,7 @@ library(RSQLite)
 ```{r message = FALSE}
 # Setting up database connection:
 sqlite = dbDriver("SQLite")
-HMMDB  = dbConnect(sqlite, "/Users/lee/Data/SteriodHMMs/HMMDBV3.sqlite") # Location of HMMER-DB Sqlite database.
+HMMDB  = dbConnect(sqlite, "/Users/lee/Data/SteriodHMMs/HMMDBV5.sqlite") # Location of HMMER-DB Sqlite database.
 ```
 #### The code below queries the database and loads the results of the query into a R dataframe. Please note the substr() function in the SQL. It is what allows us to select what phylogenetic level we want to explore.
 ```{r}
