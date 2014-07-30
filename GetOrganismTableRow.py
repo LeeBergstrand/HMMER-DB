@@ -86,7 +86,7 @@ OrganismString = getOrganismInfo(record) # Creates a comma seperated string with
 # Appends to organism CSV.	
 try:
 	print ">> Writing to organism info to CSV file..."
-	FASTAWriter = open("OrganismDB.csv", "a")
+	FASTAWriter = open("OrganismDB.csv", "w")
 	FASTAWriter.write(OrganismString)
 	FASTAWriter.close()
 except IOError:
