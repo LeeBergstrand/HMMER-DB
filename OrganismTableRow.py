@@ -13,11 +13,10 @@
 import sys
 from Bio import SeqIO
 from os import path
-from DBSetFunctions import getOrganismInfo
 
 #===========================================================================================================
 # Functions:
-
+#------------------------------------------------------------------------------------------------------------
 # 1: Checks if in proper number of arguments are passed gives instructions on proper use.
 def argsCheck(numArgs):
 	if len(sys.argv) < numArgs or len(sys.argv) > numArgs:
@@ -26,8 +25,29 @@ def argsCheck(numArgs):
 		print "Usage: " + sys.argv[0] + " <organism.gbk>"
 		print "Examples: " + sys.argv[0] + " ecoli.gbk"
 		sys.exit(1) # Aborts program. (exit(1) indicates that an error occurred)
-
+		
 #------------------------------------------------------------------------------------------------------------
+# 2: When passed a sequence record object returns a string containing the organisms info.
+def getOrganismInfo(seqRecord):
+	print ">> Extracting Organism Info..."
+	OrganismID  = seqRecord.id
+	description = seqRecord.description.replace(",", "")
+	accessionType = ""
+	if 'plasmid' in description.lower():
+		accessionType = 'Plasmid'
+	elif 'chromosome' in description.lower():
+		accessionType = 'Chromosome'
+	elif 'genome' in description.lower():
+		accessionType = 'Chromosome'
+	else:
+		accessionType = 'Unknown'
+	source = seqRecord.annotations['source'].replace(",", "")
+	taxonomy = "_".join(seqRecord.annotations['taxonomy'])
+	OrganismGenomeLength = len(seqRecord.seq)
+
+	OrganismString = OrganismID + "," + accessionType + "," + description + "," + source + "," + taxonomy + "," + str(OrganismGenomeLength) + "\n"
+	return OrganismString
+#-------------------------------------------------------------------------------------------------------------
 
 # Main program code:
 
