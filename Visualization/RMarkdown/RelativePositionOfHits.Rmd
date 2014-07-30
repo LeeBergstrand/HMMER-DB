@@ -88,7 +88,7 @@ data = dbGetQuery(HMMDB, "/* SQL Outer Query: Wrapper for subquery one that calc
                           				)
                           			)
                           			GROUP BY
-                          				Organisms.Organism_Accession
+                          				Organisms.Source
                           			HAVING
                           				count(DISTINCT HMM_Data.HMM_Family) >= 13.8 /* Filters out organisms with an completeness (number of HMM families with hits) less than 60%*/
                           			ORDER BY

@@ -1,0 +1,157 @@
+<html>
+<head><meta http-equiv="content-type" content="text/html; charset=UTF-8"></head>
+<body>
+<h5 align="right" style="color: gray; ">Snapshot on 2014-05-27 22:08:59</h5>
+<h3>Database: main</h3>
+<br>
+<h4>Proteins</h4>
+<table border=1 width=75%>
+<tr>
+	<th width=35%>Field</th>
+	<th width=30%>Type</th>
+	<th width=15%>Allow Null</th>
+	<th width=20%>Default Value</th>
+</tr>
+<tr>
+	<td width=35%>Protein_Accession</td>
+	<td width=30%>text(25,0)</td>
+	<td width=15%>No</td>
+	<td width=20%></td>
+</tr>
+<tr>
+	<td width=35%>Organism_Accession</td>
+	<td width=30%>text(25,0)</td>
+	<td width=15%>No</td>
+	<td width=20%></td>
+</tr>
+<tr>
+	<td width=35%>Locus</td>
+	<td width=30%>text(25,0)</td>
+	<td width=15%>No</td>
+	<td width=20%></td>
+</tr>
+<tr>
+	<td width=35%>Start</td>
+	<td width=30%>integer(300,0)</td>
+	<td width=15%>No</td>
+	<td width=20%></td>
+</tr>
+<tr>
+	<td width=35%>End</td>
+	<td width=30%>integer(300,0)</td>
+	<td width=15%>No</td>
+	<td width=20%></td>
+</tr>
+<tr>
+	<td width=35%>Strand</td>
+	<td width=30%>integer(1,0)</td>
+	<td width=15%>No</td>
+	<td width=20%></td>
+</tr>
+<tr>
+	<td width=35%>FASTA_Sequence</td>
+	<td width=30%>text(5500,0)</td>
+	<td width=15%>No</td>
+	<td width=20%></td>
+</tr>
+</table>
+<br>
+<h4>Organisms</h4>
+<table border=1 width=75%>
+<tr>
+	<th width=35%>Field</th>
+	<th width=30%>Type</th>
+	<th width=15%>Allow Null</th>
+	<th width=20%>Default Value</th>
+</tr>
+<tr>
+	<td width=35% style="text-decoration: underline"><em>Organism_Accession</em></td>
+	<td width=30%>text(25,0)</td>
+	<td width=15%>No</td>
+	<td width=20%></td>
+</tr>
+<tr>
+	<td width=35%>Organism_Description</td>
+	<td width=30%>text(300,0)</td>
+	<td width=15%>No</td>
+	<td width=20%></td>
+</tr>
+<tr>
+	<td width=35%>Source</td>
+	<td width=30%>text(300,0)</td>
+	<td width=15%>No</td>
+	<td width=20%></td>
+</tr>
+<tr>
+	<td width=35%>Organism_Phylogeny</td>
+	<td width=30%>text(300,0)</td>
+	<td width=15%>No</td>
+	<td width=20%></td>
+</tr>
+</table>
+<br>
+<h4>HMM_Hits</h4>
+<table border=1 width=75%>
+<tr>
+	<th width=35%>Field</th>
+	<th width=30%>Type</th>
+	<th width=15%>Allow Null</th>
+	<th width=20%>Default Value</th>
+</tr>
+<tr>
+	<td width=35%>Protein_Accession</td>
+	<td width=30%>text(25,0)</td>
+	<td width=15%>No</td>
+	<td width=20%></td>
+</tr>
+<tr>
+	<td width=35%>HMM_Model</td>
+	<td width=30%>text(35,0)</td>
+	<td width=15%>No</td>
+	<td width=20%></td>
+</tr>
+<tr>
+	<td width=35%>HMM_Score</td>
+	<td width=30%>integer(4,0)</td>
+	<td width=15%>No</td>
+	<td width=20%></td>
+</tr>
+<tr>
+	<td width=35%>HMM_E_Value</td>
+	<td width=30%>real(4,10)</td>
+	<td width=15%>No</td>
+	<td width=20%></td>
+</tr>
+<tr>
+	<td width=35%>Ali_From</td>
+	<td width=30%>integer(4,0)</td>
+	<td width=15%>No</td>
+	<td width=20%></td>
+</tr>
+<tr>
+	<td width=35%>Ali_To</td>
+	<td width=30%>integer(4,0)</td>
+	<td width=15%>No</td>
+	<td width=20%></td>
+</tr>
+<tr>
+	<td width=35%>HMM_From</td>
+	<td width=30%>integer(4,0)</td>
+	<td width=15%>No</td>
+	<td width=20%></td>
+</tr>
+<tr>
+	<td width=35%>HMM_To</td>
+	<td width=30%>integer(4,0)</td>
+	<td width=15%>No</td>
+	<td width=20%></td>
+</tr>
+<tr>
+	<td width=35%>HMM_Coverage</td>
+	<td width=30%>real(2,10)</td>
+	<td width=15%>No</td>
+	<td width=20%></td>
+</tr>
+</table>
+</body>
+</html>

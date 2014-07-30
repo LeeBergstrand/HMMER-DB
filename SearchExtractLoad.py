@@ -24,8 +24,6 @@ from os import path
 from Bio import SeqIO 
 from multiprocessing import cpu_count
 
-import time # Dev. Import
-
 processors = cpu_count() # Gets number of processor cores for HMMER.
 
 # Regex's
