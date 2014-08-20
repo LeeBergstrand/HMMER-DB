@@ -80,7 +80,7 @@ AND Organisms.Organism_Accession IN (
 			AND Organisms.Organism_Accession = Proteins.Organism_Accession
 			AND HMM_Hits.HMM_Model LIKE 'KshA%' /* Selects organisms with a hit for KshA*/
 			AND HMM_Hits.HMM_Coverage >= 0.8
-			AND Organisms.Organism_Description NOT LIKE 'Myco%' /* Selects non-Mycbacterium */
+			AND Organisms.Organism_Description LIKE 'Myco%' /* Selects non-Mycbacterium */
 		)
 	)
 	GROUP BY
@@ -116,9 +116,9 @@ head(data) # Note: The final column may wrap to the next line.
 ```{r fig.width = 15, fig.height = 10}
 plotObj = ggplot(data, aes(x = Position, y = Organism_Description, color = factor(HMM_Family)))
 plotObj + geom_point(alpha = 3/4) + # Slight alpha so one can visualize overlaping points better.
-          ggtitle("Relative positions of proteins with HMM hits for non-Mycobacterium bacteria in the database.") + 
+          ggtitle("Positions of proteins with HMM hits for Mycobacterium in the database.") + 
           xlim(0, 10000000) +
-          xlab("Protein's postion on geneome (bp).") + ylab("Organism") + labs(colour = "Type of HMM hit:") 
+          xlab("Protein's postion on chromosome/plasmid  (bp).") + ylab("Organism") + labs(colour = "Type of HMM hit:") 
 ```
 
 *Please note that most bacterial genomes are circular and the genome may start at an arbitrary point.*
@@ -127,9 +127,9 @@ plotObj + geom_point(alpha = 3/4) + # Slight alpha so one can visualize overlapi
 ```{r fig.width = 15, fig.height = 10}
 plotObj = ggplot(data, aes(x = Position, y = Organism_Description, fill = 'black'))
 plotObj + geom_point(alpha = 1/5) + # Proteins are all the same color and we use alpha to highlight areas with a greater number of hit proteins.
-          ggtitle("Relative density of proteins with HMM hits for non-Mycobacterium bacteria in the database.") + 
+          ggtitle("Density of proteins with HMM hits for Mycobacterium in the database.") + 
           xlim(0, 10000000) +
-          xlab("Protein's postion on geneome (bp).") + ylab("Organism") + theme(legend.position = "none")
+          xlab("Protein's postion on chromosome/plasmid  (bp).") + ylab("Organism") + theme(legend.position = "none")
 ```
 
 *Please note that most bacterial genomes are circular and the genome may start at an arbitrary point.*
@@ -147,7 +147,7 @@ head(dataTwo) # Note: The final column may wrap to the next line.
 ```{r fig.width = 15, fig.height = 10}
 plotObj = ggplot(dataTwo, aes(x = Position, y = Organism_Description, color = factor(HMM_Family)))
 plotObj + geom_point(alpha = 3/4) + # Slight alpha so one can visualize overlaping points better.
-          ggtitle("Relative positions of HsaC and KshA HMM hits for non-Mycobacterium bacteria in the database.") + 
+          ggtitle("Positions of HsaC and KshA HMM hits for Mycobacterium in the database.") + 
           xlim(0, 10000000) +
-          xlab("Protein's postion on geneome (bp).") + ylab("Organism") + labs(colour = "Type of HMM hit:") 
+          xlab("Protein's postion on chromosome/plasmid (bp).") + ylab("Organism") + labs(colour = "Type of HMM hit:") 
 ```
