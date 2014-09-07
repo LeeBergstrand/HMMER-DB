@@ -45,7 +45,7 @@ head(data) # Note: The columns may wrap to the next line.
 plotObj = ggplot(data, aes(x = HMM_Model, y = Organism_Count, fill = Domain))
 plotObj + geom_bar(stat = "identity", position = "identity") + coord_flip() +
           ggtitle("Number of organisms with hits for particular HMM models for each Domain") + 
-          ylab("Number of organisms with hits.") + xlab("HMM Family")
+          ylab("Number of organisms with hits.") + xlab("HMM Model")
 ```
 
 ### Lets group by HMM family for a more concise visualization: 
