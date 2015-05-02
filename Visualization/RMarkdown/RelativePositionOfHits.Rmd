@@ -84,7 +84,7 @@ AND Organisms.Organism_Accession IN (
 		)
 	)
 	GROUP BY
-		Organisms.Organism_Description
+		Organisms.Organism_Accession
 	HAVING
 		count(DISTINCT HMM_Data.HMM_Family) >= 5.4
 	ORDER BY
