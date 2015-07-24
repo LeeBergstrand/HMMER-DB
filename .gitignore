@@ -64,3 +64,4 @@ TestDBs/
 Visualization/*/*.md
 Visualization/*/*.html
 Visualization/*/figure
+.idea
