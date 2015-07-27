@@ -1,6 +1,6 @@
 #!/usr/bin/env python 
 # Created by: Lee Bergstrand 
-# Descript: A program that extracts the protein annotations from a fasta file and searches these 
+# Description: A program that extracts the protein annotations from a fasta file and searches these
 #           annotations using HMMsearch and an HMM file. It then stores hits along with organism
 #           information (gathered from a csv file) in a sqlite3 database. 
 #
@@ -248,7 +248,7 @@ if not HMMFile.endswith(".hmm"):
 if not sqlFile.endswith(".sqlite"):
 	print("[Warning] " + sqlFile + " may not be a sqlite file!")
 
-# Read in genbank file as a sequence record object.
+# Read in Genbank file as a sequence record object.
 try:
 	print(">> Opening FASTA File: " + OrganismFile)
 	handle = open(OrganismFile, "rU")
