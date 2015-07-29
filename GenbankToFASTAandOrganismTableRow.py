@@ -11,10 +11,10 @@ Requirements: - This script requires the Biopython module: http://biopython.org/
 """
 
 # Imports & Setup:
-import sys
-from Bio import SeqIO
 import os
 import argparse
+
+from lib import *
 
 
 # ==========
@@ -31,15 +31,16 @@ def main(args):
 	csv_file_name = os.path.join(os.getcwd(), 'OrganismDB.csv')
 
 	check_extension(input_file_path)
-	seq_record = extract_sequence_record(input_file_path)
+	seq_records = extract_sequence_records(input_file_path, 'genbank')
 
-	if organism_info_flag:
-		csv_row = get_organism_info(seq_record)
-		write_csv(csv_row, csv_file_name)
+	for record in seq_records:
+		if organism_info_flag:
+			csv_row = get_organism_info(record)
+			write_csv(csv_row, csv_file_name)
 
-	if annotation_flag:
-		fasta = get_coding_annotation_fasta(seq_record)
-		write_fasta(fasta, fasta_file_name)
+		if annotation_flag:
+			fasta = get_coding_annotation_fasta(record)
+			write_fasta(fasta, fasta_file_name)
 
 
 # ----------------------------------------------------------------------------------------
@@ -52,30 +53,6 @@ def check_extension(in_path):
 	in_file_extension = os.path.splitext(in_path)[-1]
 	if not in_file_extension == ".gbk":
 		print("[Warning] " + in_file_extension + " may not be a Genbank file!")
-
-
-# ----------------------------------------------------------------------------------------
-def extract_sequence_record(organism_file):
-	"""
-	Read in Genbank file as a sequence record object using Biopython.
-
-	:param organism_file: The path to the input file.
-	:return: Biopython sequence record object.
-	"""
-	try:
-		print(">> Opening " + organism_file)
-		handle = open(organism_file, "rU")
-		try:
-			record = SeqIO.read(handle, "genbank")
-		except ValueError as error:
-			print("Error has occurred while parsing " + organism_file + "!")
-			print(str(error))
-			sys.exit(1)
-		handle.close()
-	except IOError:
-		print("Failed to open " + organism_file)
-		sys.exit(1)
-	return record
 
 
 # ------------------------------------------------------------------------------------------------------------
@@ -155,10 +132,10 @@ def get_coding_annotation_fasta(seq_record):
 # ----------------------------------------------------------------------------------------
 def write_fasta(fasta, out_file_path):
 	"""
-	Writes annotations to FASTA file.
+	Writes a FASTA file string to file.
 
-	:param fasta:
-	:param out_file_path:
+	:param fasta: Input FASTA formatted string.
+	:param out_file_path: The path for the output FASTA file.
 	"""
 	try:
 		print(">> Writing fasta File...")
@@ -173,10 +150,10 @@ def write_fasta(fasta, out_file_path):
 # ----------------------------------------------------------------------------------------
 def write_csv(organism_string, out_file_path):
 	"""
-	Appends to organism CSV.
+	Appends new row to the organism data CSV.
 
-	:param organism_string:
-	:param out_file_path:
+	:param organism_string: A CSV row containing organism info.
+	:param out_file_path: The path to the output CSV file to append too.
 	"""
 	try:
 		print(">> Writing to organism info to CSV file...")

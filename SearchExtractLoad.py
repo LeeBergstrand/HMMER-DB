@@ -1,8 +1,10 @@
-#!/usr/bin/env python 
-# Created by: Lee Bergstrand 
+#!/usr/bin/env python
+
+#!/usr/bin/env python
+# Created by: Lee Bergstrand
 # Description: A program that extracts the protein annotations from a fasta file and searches these
 #           annotations using HMMsearch and an HMM file. It then stores hits along with organism
-#           information (gathered from a csv file) in a sqlite3 database. 
+#           information (gathered from a csv file) in a sqlite3 database.
 #
 # Requirements: - This script requires the Biopython module: http://biopython.org/wiki/Download
 #               - This script requires HMMER 3.1 or later.
@@ -264,7 +266,7 @@ try:
 	print(">> Opening CSV File: " + PhyloCSVFile)
 	readFile = open(PhyloCSVFile, "r")
 	reader = csv.reader(
-		readFile)  # Opens file with csv module which takes into account verying csv formats and parses correctly.
+		readFile)  # Opens file with csv module which takes into account varying csv formats and parses correctly.
 	print(">> Good CSV file.")
 	for row in reader:
 		OrganismHash[row[0]] = row
