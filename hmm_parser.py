@@ -11,6 +11,7 @@ Requirements:   - This script requires HMMER 3.1 or later.
 # Imports & Setup:
 import re
 import sys
+from hashlib import md5
 
 hit_row_regex = re.compile("^\s*\d\s*((\?)|(\!))\s*")
 
@@ -55,6 +56,11 @@ class HMMHit(object):
 
 	def __str__(self):
 		return self.__repr__()
+
+	def get_md5(self):
+		hash_string = "".join([str(x) for x in self.__dict__.values()])  # Join all attributes into a single string.
+		hash_md5 = md5(hash_string.encode('utf-8')).hexdigest()  # Create md5 hash.
+		return hash_md5
 
 
 # ==========
@@ -149,7 +155,7 @@ def get_hmm_length(hmm_path):
 	"""
 	try:
 		hmm_length_regex = re.compile("^LENG\s*\d*$")
-		print(">> Opening HMM File: " + hmm_path)
+		print(">> Opening HMM file: " + hmm_path)
 		with open(hmm_path, "rU") as inFile:
 			current_line = inFile.readline()
 			while not hmm_length_regex.match(current_line):

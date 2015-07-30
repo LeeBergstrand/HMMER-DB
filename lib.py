@@ -3,7 +3,7 @@
 """
 Created by: Lee Bergstrand
 
-Description:    Functions for HMM search.
+Description:    Functions for HMMER-DB.
 """
 
 # Imports & Setup:
@@ -11,10 +11,7 @@ import csv
 import sys
 from Bio import SeqIO
 import subprocess
-from multiprocessing import cpu_count
 import re
-
-processors = cpu_count()  # Gets number of processor cores for HMMER.
 
 # Regex's
 LocusRegex = re.compile("\(Locus:\s\S*\)")
@@ -30,7 +27,7 @@ def extract_sequence_records(organism_file_path, file_type):
 	:return: Biopython sequence record object.
 	"""
 	try:
-		print(">> Opening " + organism_file_path)
+		print(">> Opening FASTA file: " + organism_file_path)
 		handle = open(organism_file_path, "rU")
 		try:
 			records = list(SeqIO.parse(handle, file_type))
@@ -43,6 +40,31 @@ def extract_sequence_records(organism_file_path, file_type):
 		print("Failed to open " + organism_file_path)
 		sys.exit(1)
 	return records
+
+
+# -----------------------------------------------------------------------------------------------------------
+def check_extensions(organism_file_path, csv_file_path, hmm_file_paths, sql_file_paths):
+	"""
+	Performs file extension checks.
+
+	:param organism_file_path: Path to the organism database file.
+	:param csv_file_path: Path to the organism information database file.
+	:param hmm_file_paths: Path to the HMM model file.
+	:param sql_file_paths: Path to the sqlite3 file.
+	"""
+
+	print(">> Performing file extension checks...")
+	if not organism_file_path.endswith(".faa"):
+		print("[Warning] " + organism_file_path + " may not be a fasta file!")
+	if not csv_file_path.endswith(".csv"):
+		print("[Warning] " + csv_file_path + " may not be a csv file!")
+
+	for hmm_path in hmm_file_paths:
+		if not hmm_path.endswith(".hmm"):
+			print("[Warning] " + hmm_path + " may not be a HMM file!")
+
+	if not sql_file_paths.endswith(".sqlite"):
+		print("[Warning] " + sql_file_paths + " may not be a sqlite file!")
 
 
 # ----------------------------------------------------------------------------------------
@@ -80,7 +102,7 @@ def generate_fasta_dict(sec_record_list):
 
 
 # ----------------------------------------------------------------------------------------
-def run_hmm_search(fasta_string, hmmer_model_path):
+def hmm_search(fasta_string, hmmer_model_path, processes):
 	"""
 	Runs HMMER with settings specific for extracting subject sequences.
 
@@ -88,7 +110,7 @@ def run_hmm_search(fasta_string, hmmer_model_path):
 	:param hmmer_model_path: Path to the HMM model to be used as a query.
 	:return:
 	"""
-	process = subprocess.Popen(["hmmsearch", "--acc", "--cpu", str(processors), hmmer_model_path, "-"],
+	process = subprocess.Popen(["hmmsearch", "--acc", "--cpu", str(processes), hmmer_model_path, "-"],
 	                           stdin=subprocess.PIPE, stdout=subprocess.PIPE, bufsize=1)
 
 	# This returns a list with both stderr and stdout. Only return stdout. Fail if error.
@@ -135,6 +157,7 @@ def get_hit_protein_data(hmm_hit_table, annotation_fasta_dict, organism_accessio
 	return hit_proteins
 
 
+# -----------------------------------------------------------------------------------------------------------
 def extract_csv_dict(input_csv_path):
 	"""
 	Opens OrganismDB CSV file for reading and stores as dictionary.
@@ -143,17 +166,98 @@ def extract_csv_dict(input_csv_path):
 	:return: Dictionary with each row in the CSV keyed by the organism accession (CSV row one).
 	"""
 
-	organism_hash = {}
+	organism_data_csv = {}
 	try:
-		print(">> Opening CSV File: " + input_csv_path)
+		print(">> Opening organism CSV file: " + input_csv_path)
 		read_file = open(input_csv_path, "r")
 		reader = csv.reader(read_file)
-		print(">> Good CSV file.")
 		for row in reader:
-			organism_hash[row[0]] = row  # Row[0] is the organism accession.
+			organism_data_csv[row[0].split('.')[0]] = row  # Row[0] is the organism accession.
 		read_file.close()
 	except IOError:
 		print("Failed to open " + input_csv_path)
 		sys.exit(1)
 
-	return organism_hash
+	return organism_data_csv
+
+
+# -----------------------------------------------------------------------------------------------------------
+def insert_organism_info(db_cursor, organism_info):
+	"""
+	Inserts organism info into DB.
+
+	:param db_cursor: Sqlite3 database cursor.
+	:param organism_info: List containing organism info.
+	"""
+
+	query = '''INSERT OR REPLACE INTO Organisms
+(
+	Organism_Accession,
+	Accession_Type,
+	Organism_Description,
+	Source,
+	Organism_Phylogeny,
+	Sequence_Length
+)
+VALUES
+	(?,?,?,?,?,?)'''
+
+	db_cursor.execute(query, organism_info)
+
+
+# -----------------------------------------------------------------------------------------------------------
+# 8:
+def insert_proteins(db_cursor, hit_proteins):
+	"""
+	Inserts protein info into DB.
+
+	:param db_cursor: Sqlite3 database cursor.
+	:param hit_proteins: List containing protein info.
+	"""
+
+	query = '''INSERT OR REPLACE INTO Proteins
+(
+	Protein_Accession,
+	Organism_Accession,
+	Locus,
+	Start,
+	"End",
+	Strand,
+	FASTA_Sequence
+)
+VALUES
+	(?,?,?,?,?,?,?)'''
+
+	for protein in hit_proteins:
+		db_cursor.execute(query, protein)
+
+
+# -----------------------------------------------------------------------------------------------------------
+def insert_hits(cursor, hmm_hit_list):
+	"""
+	Inserts hits into DB and creates md5 hash for primary key.
+
+	:param cursor: Sqlite3 database cursor.
+	:param hmm_hit_list: List of hmm hit objects.
+	"""
+
+	query = '''INSERT OR REPLACE INTO HMM_Hits
+(
+	Hit_HASH,
+	Protein_Accession,
+	HMM_Model,
+	HMM_Score,
+	HMM_E_Value,
+	Ali_From,
+	Ali_To,
+	HMM_From,
+	HMM_To,
+	HMM_Coverage
+)
+VALUES
+	(?,?,?,?,?,?,?,?,?,?)'''
+
+	for hit in hmm_hit_list:
+		hit_list = [hit.get_md5(), hit.target_protein, hit.hmm_name, hit.score, hit.e_value, hit.ali_from, hit.ali_to,
+		            hit.hmm_from, hit.hmm_to, hit.hmm_coverage]
+		cursor.execute(query, hit_list)
