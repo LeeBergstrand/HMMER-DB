@@ -108,7 +108,7 @@ def hmm_search(fasta_string, hmmer_model_path, processes):
 
 	:param fasta_string: String containing protein sequences in FASTA format.
 	:param hmmer_model_path: Path to the HMM model to be used as a query.
-	:return:
+	:return: String containing hmmsearch output.
 	"""
 	process = subprocess.Popen(["hmmsearch", "--acc", "--cpu", str(processes), hmmer_model_path, "-"],
 	                           stdin=subprocess.PIPE, stdout=subprocess.PIPE, bufsize=1)
@@ -129,8 +129,8 @@ def get_hit_protein_data(hmm_hit_table, annotation_fasta_dict, organism_accessio
 
 	:param hmm_hit_table: Table of HMM hit objects.
 	:param annotation_fasta_dict: Dictionary containing FASTA sequences keyed by their IDs
-	:param organism_accession: Name of the organism
-	:return:
+	:param organism_accession: The accession of the organism.
+	:return: A list of lists of hit protein properties.
 	"""
 
 	hit_proteins = []

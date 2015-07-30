@@ -3,7 +3,8 @@
 """
 Created by: Lee Bergstrand
 
-Description:    Parses HMM search output.
+Description:    Contains an object for representing HMM hits and methods for parsing hmmsearch results into these
+				objects. Also contains methods filtering these objects by their properties.
 
 Requirements:   - This script requires HMMER 3.1 or later.
 """
@@ -58,6 +59,11 @@ class HMMHit(object):
 		return self.__repr__()
 
 	def get_md5(self):
+		"""
+		Concatenates all object properties as strings and hashes them using an MD5 checksum.
+
+		:return: MD5 checksum of all object properties.
+		"""
 		hash_string = "".join([str(x) for x in self.__dict__.values()])  # Join all attributes into a single string.
 		hash_md5 = md5(hash_string.encode('utf-8')).hexdigest()  # Create md5 hash.
 		return hash_md5
