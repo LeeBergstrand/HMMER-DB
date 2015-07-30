@@ -1,340 +1,177 @@
-#!/usr/bin/env python 
-# Created by: Lee Bergstrand 
-# Description: A program that extracts the protein annotations from a fasta file and searches these
-#           annotations using HMMsearch and an HMM file. It then stores hits along with organism
-#           information (gathered from a csv file) in a sqlite3 database. 
-#
-# Requirements: - This script requires the Biopython module: http://biopython.org/wiki/Download
-#               - This script requires HMMER 3.1 or later.
-#               - This script requires sqlLite3 or later.
-#
-# Usage: HMMExtract.py <organism.faa> <organisms.csv> <hmm.hmm> <sqldb.sqlite>
-# Example: HMMExtract.py ecoli.faa bacteria.csv helicase.hmm helicasedb.sqlite
-# ----------------------------------------------------------------------------------------
-# ===========================================================================================================
-# Imports & Setup:
+#!/usr/bin/env python
 
-import sys
-import subprocess
+"""
+Created by: Lee Bergstrand
+
+Description:    A program that extracts the protein annotations from a fasta file and searches these
+				annotations using HMMsearch and an HMM file. It then stores hits along with organism
+				information (gathered from a csv file) in a sqlite3 database.
+
+Requirements:   - This script requires the Biopython module: http://biopython.org/wiki/Download
+				- This script requires HMMER 3.1 or later.
+				- This script requires sqlLite3 or later. HMMExtract.py <organism.faa> <organisms.csv> <hmm.hmm> <sqldb.sqlite>
+"""
+
+# Imports & Setup:
+import argparse
 import sqlite3
-import csv
-import re
-import hashlib
+from hmm_parser import *
+from lib import *
 from os import path
-from Bio import SeqIO
 from multiprocessing import cpu_count
 
 processors = cpu_count()  # Gets number of processor cores for HMMER.
 
-# Regex's
-LocusRegex = re.compile("\(Locus:\s\S*\)")
-LocationRegex = re.compile("\(Location:\s\[(\S*)\:(\S*)\]\((\S)\)\)")
 
-
-# ===========================================================================================================
+# ==========
 # Functions:
-
-# 1: Checks if in proper number of arguments are passed gives instructions on proper use.
-def argsCheck(numArgs):
-	if len(sys.argv) < numArgs or len(sys.argv) > numArgs:
-		print("Hmmer hit cataloguer.")
-		print("By Lee Bergstrand\n")
-		print("Usage: " + sys.argv[0] + "  <organism.faa> <organisms.csv> <hmm.hmm> <sqldb.sqlite>")
-		print("Examples: " + sys.argv[0] + "  <organism.faa> <organisms.csv> <hmm.hmm> <sqldb.sqlite>")
-		sys.exit(1)  # Aborts program. (exit(1) indicates that an error occurred)
+# ==========
 
 
-# ------------------------------------------------------------------------------------------------------------
-# 2: Runs HMMER with settings specific for extracting subject sequences.
-def runHMMSearch(FASTA, HMMERDBFile):
-	process = subprocess.Popen(["hmmsearch", "--acc", "--cpu", str(processors), HMMERDBFile, "-"],
-	                           stdin=subprocess.PIPE, stdout=subprocess.PIPE, bufsize=1)
-	stdout, error = process.communicate(
-		FASTA)  # This returns a list with both stderr and stdout. Only want stdout which is first element.
-	if error:
-		print(str(error))
-		sys.exit(1)
-	else:
-		return stdout
+# ----------------------------------------------------------------------------------------
+def main(args):
+	input_file_path = args.in_file[0]
+	organism_csv_path = args.in_csv[0]
+	hmm_model_paths = args.hmm_models
+	database_path = args.database[0]
 
+	print('\nHMMER-DB')
+	print('====================================================')
 
-# ------------------------------------------------------------------------------------------------------------
-# 3: Creates a python dictionary (hash table) that contains the the fasta for each protein in the proteome.
-def createProteomeHash(ProteomeFile):
-	ProteomeHash = dict()
-	try:
-		handle = open(ProteomeFile, "rU")
-		proteome = SeqIO.parse(handle, "fasta")
-		for record in proteome:
-			ProteomeHash.update({record.id: record.format("fasta")})
-		handle.close()
-	except IOError:
-		print("Failed to open " + ProteomeFile)
-		exit(1)
-	return ProteomeHash
+	check_extensions(input_file_path, organism_csv_path, hmm_model_paths, database_path)
 
+	print('')
 
-# ------------------------------------------------------------------------------------------------------------
-# 4: Parses HMM searches text output and generates a two dimensional array of the domain alignments results.
-def parseHmmsearchResults(HMMResults, HMMName, HMMLength):
-	HitRowRegex = re.compile("^\s*\d\s*((\?)|(\!))\s*")
-	HMMResults = HMMResults.split(">>")  # Splits output at domain alignments.
-	del HMMResults[0]  # Deletes stuff at top of text output which would be the first element after the split.
-	HMMResults = [x.split("Alignments")[0] for x in HMMResults]  # Removes detailed per alignment info.
-	HMMResultsCleaned = []
-	for proteinResult in HMMResults:
-		proteinResult = proteinResult.splitlines()
-		TargetProtein = proteinResult[0].split()[0]  # Records protein accession from first line
-		for row in proteinResult:
-			if HitRowRegex.match(row):  # If row is a domain table line.
-				row = row.split()
-				score = float(row[2])
-				evalue = float(row[5])
-				hmmfrom = int(row[6])
-				hmmto = int(row[7])
-				alifrom = int(row[9])
-				alito = int(row[10])
-				hmmCoverage = ((float((hmmto - hmmfrom))) / float((HMMLength)))
-				DomainRow = [TargetProtein, HMMName, score, evalue, hmmfrom, hmmto, alifrom, alito, hmmCoverage]
-				HMMResultsCleaned.append(DomainRow)
-	return HMMResultsCleaned
+	sequence_record_list = extract_sequence_records(input_file_path, 'fasta')
+	fasta_string = generate_fasta_string(sequence_record_list)
+	fasta_dict = generate_fasta_dict(sequence_record_list)
+	organism_data_dict = extract_csv_dict(organism_csv_path)
+	organism_file_name = path.basename(input_file_path).split('.')[0]
+	organism_data = organism_data_dict[organism_file_name]
 
+	organism_accession = organism_data[0]
 
-# ------------------------------------------------------------------------------------------------------------
-# 6:  HMM Hits.
-def filterHMMHitTable(HMMHitTable):
-	HMMHitTable = [row for row in HMMHitTable if row[3] < float("1e-25")]  # Filters by E-value.
+	print('')
 
-	i = 0
-	while i < (len(HMMHitTable) - 1):
-		RowOne = HMMHitTable[i]  # Current Row in hit table.
-		RowTwo = HMMHitTable[i + 1]  # Row below.
-		if RowOne[0] == RowTwo[0]:  # If they have the same targe protein.
-			AlignmentOneLength = RowOne[-2] - RowOne[-3]  # RowOne AliTo - AliFrom
-			AlignmentTwoLength = RowTwo[-2] - RowTwo[-3]  # RowTwo AliTo - AliFrom
-			Overlap = RowOne[-2] - RowTwo[-3]  # RowOne AliTo -  RowTwo AliFrom
-			if Overlap > 0:  # If there is overlap...
-				# If the overlap is greater than 50% of either alignment.
-				if ((float(Overlap) / float(AlignmentOneLength)) > 0.5) or (
-							(float(Overlap) / float(AlignmentTwoLength)) > 0.5):
-					if RowOne[3] < RowTwo[
-						3]:  # If row one has a lower E-value than row two remove row two else remove row one.
-						HMMHitTable.remove(RowTwo)
-					else:
-						HMMHitTable.remove(RowOne)
-					i -= 1  # Resets list index.
-		i += 1
+	hmm_hit_list = []
+	protein_data_list = []
+	for hmm_path in hmm_model_paths:
+		hits_to_add, proteins_to_add = run_hmm_search(hmm_path, fasta_string, fasta_dict,
+		                                              organism_accession, processors)
 
-	HMMHitTable = [row for row in HMMHitTable if row[-1] > 0.3]  # Filters by Query Coverage.
-	return HMMHitTable
+		hmm_hit_list.extend(hits_to_add)
+		protein_data_list.extend(proteins_to_add)
 
-
-# ------------------------------------------------------------------------------------------------------------
-# 6: Creates list of hits protein FASTAs.
-def getHitProteins(HMMHitTable, AnnotationFASTADict, OrganismName):
-	HitProteins = []
-	for row in HMMHitTable:
-		ProteinAccession = row[0]
-		ProteinFASTA = AnnotationFASTADict[ProteinAccession]
-
-		Locus = str(LocusRegex.search(ProteinFASTA).group(0))
-		Locus = Locus.split()[1].rstrip(")")
-		LocationData = LocationRegex.search(ProteinFASTA)
+	# To account for sqlite3 table lock on write timeout
+	# is delayed in proportion to the number of CPUs used.
+	timeout_for_parallelism = 225 * processors
+	if path.isfile(database_path):
 		try:
-			Start = int(LocationData.group(1))
-			End = int(LocationData.group(2))
-			Strand = LocationData.group(3)
-			ProteinData = [ProteinAccession, OrganismName, Locus, Start, End, Strand, ProteinFASTA]
-			HitProteins.append(ProteinData)
-		except AttributeError as error:
-			print(row)
-			print(ProteinFASTA)
-			print(LocationData)
-			print("This is the organism: ", OrganismName)
-			print("The AttributeError was ", str(error))
+			print('')
+
+			hmm_db = sqlite3.connect(database_path, timeout=timeout_for_parallelism)
+			print(">> Opening sqlite3 file: " + database_path)
+			cursor = hmm_db.cursor()
+
+			print(">> Inserting organism info...")
+			insert_organism_info(cursor, organism_data)
+			print(">> Inserting cached protein data...")
+			insert_proteins(cursor, protein_data_list)
+			print(">> Inserting cached HMM hit data...")
+			insert_hits(cursor, hmm_hit_list)
+
+			hmm_db.commit()
+			hmm_db.close()
+		except sqlite3.Error as error:
+			print("sqlite3 Error: " + str(error))
+			print("The program will be aborted.")
 			sys.exit(1)
-	return HitProteins
-
-
-# -----------------------------------------------------------------------------------------------------------
-# 7: Inserts organism info into DB.
-def insertOrganismInfo(db_cursor, OrganismInfo):
-	query = '''INSERT OR REPLACE INTO Organisms
-(
-	Organism_Accession,
-	Accession_Type,
-	Organism_Description,
-	Source,
-	Organism_Phylogeny,
-	Sequence_Length
-)
-VALUES
-	(?,?,?,?,?,?)'''
-
-	db_cursor.execute(query, OrganismInfo)
-
-
-# -----------------------------------------------------------------------------------------------------------
-# 8: Inserts protein info into DB.
-def insertProteins(db_cursor, HitProteins):
-	query = '''INSERT OR REPLACE INTO Proteins
-(
-	Protein_Accession,
-	Organism_Accession,
-	Locus,
-	Start,
-	"End",
-	Strand,
-	FASTA_Sequence
-)
-VALUES
-	(?,?,?,?,?,?,?)'''
-
-	for protein in HitProteins:
-		db_cursor.execute(query, protein)
-
-
-# -----------------------------------------------------------------------------------------------------------
-# 9: Inserts hits into DB and creates md5 hash for primary key.
-def insertHits(cursor, HMMHitTable):
-	query = '''INSERT OR REPLACE INTO HMM_Hits
-(
-	Hit_HASH,
-	Protein_Accession,
-	HMM_Model,
-	HMM_Score,
-	HMM_E_Value,
-	Ali_From,
-	Ali_To,
-	HMM_From,
-	HMM_To,
-	HMM_Coverage
-)
-VALUES
-	(?,?,?,?,?,?,?,?,?,?)'''
-
-	HitHash = hashlib.md5()
-	for hit in HMMHitTable:
-		HitHash.update("".join(
-			[str(i) for i in HMMHitTable]))  # Converts every list element to a string, joins them and updates Hash.
-		hit = [HitHash.hexdigest()] + hit
-		cursor.execute(query, hit)
-
-
-# ===========================================================================================================
-# Main program code:
-
-# House keeping...
-argsCheck(5)  # Checks if the number of arguments are correct.
-
-# Stores file one for input checking.
-print(">> Starting up...")
-OrganismFile = sys.argv[1]
-PhyloCSVFile = sys.argv[2]
-HMMFile = sys.argv[3]
-sqlFile = sys.argv[4]
-
-HMMName = path.split(HMMFile)[1].rstrip(".hmm")
-OrganismName = path.split(OrganismFile)[1].rstrip(".faa")
-
-# File extension checks
-print(">> Performing file extension checks...")
-if not OrganismFile.endswith(".faa"):
-	print("[Warning] " + OrganismFile + " may not be a fasta file!")
-if not PhyloCSVFile.endswith(".csv"):
-	print("[Warning] " + PhyloCSVFile + " may not be a csv file!")
-if not HMMFile.endswith(".hmm"):
-	print("[Warning] " + HMMFile + " may not be a HMM file!")
-if not sqlFile.endswith(".sqlite"):
-	print("[Warning] " + sqlFile + " may not be a sqlite file!")
-
-# Read in Genbank file as a sequence record object.
-try:
-	print(">> Opening FASTA File: " + OrganismFile)
-	handle = open(OrganismFile, "rU")
-	records = SeqIO.parse(handle, "fasta")
-	handle.close()
-except IOError:
-	print("Failed to open " + OrganismFile)
-	sys.exit(1)
-
-# Opens OrganismDB CSV file for reading and stores as hash table.
-OrganismHash = {}
-try:
-	print(">> Opening CSV File: " + PhyloCSVFile)
-	readFile = open(PhyloCSVFile, "r")
-	reader = csv.reader(
-		readFile)  # Opens file with csv module which takes into account verying csv formats and parses correctly.
-	print(">> Good CSV file.")
-	for row in reader:
-		OrganismHash[row[0]] = row
-	readFile.close()
-except IOError:
-	print("Failed to open " + PhyloCSVFile)
-	sys.exit(1)
-
-# Gets HMM Length.
-try:
-	HMMLengthRegex = re.compile("^LENG\s*\d*$")
-	print(">> Opening HMM File: " + HMMFile)
-	with open(HMMFile, "rU") as inFile:
-		currentLine = inFile.readline()
-		while not HMMLengthRegex.match(currentLine):
-			currentLine = inFile.readline()
-		HMMLength = int(currentLine.split()[1])
-except IOError:
-	print("Failed to open " + HMMFile)
-	sys.exit(1)
-
-print(">> Extracting Protein Annotations...")
-AnnotationFASTADict = createProteomeHash(
-	OrganismFile)  # Creates a dictionary containing all protein annotations in the gbk file.
-
-print(">> Extracting Organism Info...")
-OrganismInfo = OrganismHash[OrganismName]
-
-print(">> Running Hmmsearch...")
-FASTAString = "".join(AnnotationFASTADict.values())  # Saves these annotations to a string.
-HMMResults = runHMMSearch(FASTAString, HMMFile)  # Runs hmmsearch.
-
-if len(HMMResults) < 1:
-	print("Hmmearch found no hits for " + HMMFile + " in " + OrganismName)
-	print("Aborting...")
-	sys.exit(1)
-
-print(">> Parsing and filtering hmmsearch results...")
-HMMHitTable = parseHmmsearchResults(HMMResults, HMMName,
-                                    HMMLength)  # Parses hmmsearch results into a two dimensional array.
-HMMHitTable = filterHMMHitTable(HMMHitTable)
-
-if len(HMMHitTable) < 1:
-	print("We found no quality hits for " + HMMFile + " in " + OrganismName)
-	print("Aborting...")
-	sys.exit(1)
-
-print(">> Extracting Hit Proteins.")
-HitProteins = getHitProteins(HMMHitTable, AnnotationFASTADict, OrganismName)  # Gets hit protein FASTAs.
-
-if path.isfile(sqlFile):
-	try:
-		HMMDB = sqlite3.connect(sqlFile, timeout=3600)
-		print(">> Opened database successfully.")
-		cursor = HMMDB.cursor()
-
-		print(">> Inserting Organism Info.")
-		insertOrganismInfo(cursor, OrganismInfo)
-		print(">> Inserting Proteins.")
-		insertProteins(cursor, HitProteins)
-		print(">> Inserting Hits.")
-		insertHits(cursor, HMMHitTable)
-
-		HMMDB.commit()
-		HMMDB.close()
-	except sqlite3.Error as Error:
-		print("sqlite3 Error: " + str(Error))
-		print("The program will be aborted.")
+	else:
+		print("Failed to open " + database_path)
 		sys.exit(1)
-else:
-	print("Failed to open " + sqlFile)
-	sys.exit(1)
-print(">> Done!")
+	print("\n>> Done!")
+
+
+# ------------------------------------------------------------------------------------
+def run_hmm_search(hmm_path, fasta_string, fasta_dict, organism_accession, processes):
+	"""
+	Runs the HMM search using hmmsearch.
+
+	:param hmm_path: Path to the HMM search file.
+	:param fasta_string: A FASTA string containing proteins to be searched.
+	:param fasta_dict: A dict of FASTA strings containing proteins to be searched keyed by sequence ID.
+	:param organism_accession: The accession of the organism.
+	:param processes: The number of threads to use when running hmmsearch.
+	:return: list of HMM hit objects and list of lists of protein data.
+	"""
+
+	print('')
+
+	hmm_name = path.basename(hmm_path).split('.')[0]
+	hmm_length = get_hmm_length(hmm_path)
+
+	print('>> Running hmmsearch on ' + str(processes) + ' CPUs...')
+	hmm_results_string = hmm_search(fasta_string, hmm_path, processes)
+	hmm_hit_list = parse_hmmsearch_results(hmm_results_string, hmm_name, hmm_length)
+
+	print('>> Filtering HMM hits...')
+	filtered_hmm_hit_list = filter_hmm_hit_list(hmm_hit_list)
+
+	protein_data_list = get_hit_protein_data(filtered_hmm_hit_list, fasta_dict, organism_accession)
+
+	print('>> Caching HMM hit and subject proteins data...')
+
+	return filtered_hmm_hit_list, protein_data_list
+
+
+# ----------------------------------------------------------------------------------------
+if __name__ == '__main__':
+	descriptor = """
+	A program that extracts the protein annotations from a fasta file and searches these
+	annotations using HMMsearch and an HMM file. It then stores hits along with organism
+	information (gathered from a csv file) in a sqlite3 database.
+	"""
+	parser = argparse.ArgumentParser(description=descriptor)
+
+	parser.add_argument('-i', '--in_file', metavar='FASTA', nargs=1, help='''
+	The input FASTA file containing protein sequences (Created by GenbankToFASTAandOrganismTableRow.py).''')
+
+	parser.add_argument('-c', '--in_csv', metavar='CSV', nargs=1, help='''
+	The CSV file containing the information of all input organism (Created by GenbankToFASTAandOrganismTableRow.py).''')
+
+	parser.add_argument('-m', '--hmm_models', metavar='HMM', nargs='+', help='''
+	The HMM model files representing proteins''')
+
+	parser.add_argument('-d', '--database', metavar='DATABASE', nargs=1, help='''
+	The input sqlite3 database for which the organism info and HMM results are writen to.''')
+
+	parser.add_argument('-p', '--processes', metavar='PROCESSES', nargs=1, default=processors, help='''
+	Number of parallel processes to be used by hmmsearch.''')
+
+	cli_args = parser.parse_args()
+
+	# At minimum we require all CLI inputs.
+	proceed = True
+
+	if cli_args.in_file is None:
+		print("Error: Missing input FASTA file path...")
+		proceed = False
+
+	if cli_args.in_csv is None:
+		print("Error: Missing CSV file path...")
+		proceed = False
+
+	if cli_args.hmm_models is None:
+		print("Error: Missing HMM file paths...")
+		proceed = False
+
+	if cli_args.database is None:
+		print("Error: Missing sqlite3 database path...")
+		proceed = False
+
+	if proceed:
+		main(cli_args)
+	else:
+		print("")
+		parser.print_help()
+		print("")
