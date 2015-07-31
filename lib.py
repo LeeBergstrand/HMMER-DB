@@ -52,7 +52,6 @@ def check_extensions(organism_file_path, csv_file_path, hmm_file_paths, sql_file
 	:param hmm_file_paths: Path to the HMM model file.
 	:param sql_file_paths: Path to the sqlite3 file.
 	"""
-
 	print(">> Performing file extension checks...")
 	if not organism_file_path.endswith(".faa"):
 		print("[Warning] " + organism_file_path + " may not be a fasta file!")
@@ -132,7 +131,6 @@ def get_hit_protein_data(hmm_hit_table, annotation_fasta_dict, organism_accessio
 	:param organism_accession: The accession of the organism.
 	:return: A list of lists of hit protein properties.
 	"""
-
 	hit_proteins = []
 	for hit in hmm_hit_table:
 		protein_accession = hit.target_protein
@@ -165,7 +163,6 @@ def extract_csv_dict(input_csv_path):
 	:param input_csv_path: Path to the input OrganismDB CSV file.
 	:return: Dictionary with each row in the CSV keyed by the organism accession (CSV row one).
 	"""
-
 	organism_data_csv = {}
 	try:
 		print(">> Opening organism CSV file: " + input_csv_path)
@@ -189,7 +186,6 @@ def insert_organism_info(db_cursor, organism_info):
 	:param db_cursor: Sqlite3 database cursor.
 	:param organism_info: List containing organism info.
 	"""
-
 	query = '''INSERT OR REPLACE INTO Organisms
 (
 	Organism_Accession,
@@ -214,7 +210,6 @@ def insert_proteins(db_cursor, hit_proteins):
 	:param db_cursor: Sqlite3 database cursor.
 	:param hit_proteins: List containing protein info.
 	"""
-
 	query = '''INSERT OR REPLACE INTO Proteins
 (
 	Protein_Accession,
@@ -240,7 +235,6 @@ def insert_hits(cursor, hmm_hit_list):
 	:param cursor: Sqlite3 database cursor.
 	:param hmm_hit_list: List of hmm hit objects.
 	"""
-
 	query = '''INSERT OR REPLACE INTO HMM_Hits
 (
 	Hit_HASH,

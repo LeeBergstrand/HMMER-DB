@@ -5,7 +5,7 @@ Created by: Lee Bergstrand
 
 Description:    A program that extracts the proteins annotations from a Genbank file and as well as some
 				information about the organism in the file. Stores the protein annotations as a Fasta.
-				Appends a csv file with the organism info.
+				Appends organism info to a csv file.
 
 Requirements: - This script requires the Biopython module: http://biopython.org/wiki/Download
 """
