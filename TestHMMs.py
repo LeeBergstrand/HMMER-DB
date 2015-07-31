@@ -3,13 +3,11 @@
 """
 Created by: Lee Bergstrand
 
-Description:    A program that extracts the protein annotations from a fasta file and searches these
-				annotations using HMMsearch and an HMM file. It then stores hits along with organism
-				information (gathered from a csv file) in a sqlite3 database.
+Description:    Tests that HMMs finds all reference proteins in a given organism.
 
-Requirements:   - This script requires the Biopython module: http://biopython.org/wiki/Download
-				- This script requires HMMER 3.1 or later.
-				- This script requires sqlLite3 or later. HMMExtract.py <organism.faa> <organisms.csv> <hmm.hmm> <sqldb.sqlite>
+Requirements:   - This software requires the Biopython module: http://biopython.org/wiki/Download
+				- This software requires HMMER 3.1 or later.
+				- This software requires sqlLite3 or later.
 """
 
 # Imports & Setup:
@@ -19,7 +17,7 @@ from lib import *
 from os import path
 from multiprocessing import cpu_count
 
-processors = cpu_count()  # Gets number of processor cores for HMMER.
+cpu_num = cpu_count()  # Gets number of processor cores for HMMER.
 
 
 # ==========
@@ -28,10 +26,18 @@ processors = cpu_count()  # Gets number of processor cores for HMMER.
 
 
 # ----------------------------------------------------------------------------------------
-def main(args):
-	input_file_path = args.in_file[0]
-	reference_accessions = args.list[0]
-	hmm_model_paths = args.hmm_models
+def main(args, processors):
+	input_file_path = str(args.in_file[0])
+	reference_accessions = str(args.list[0])
+	hmm_model_paths = list(args.hmm_models)
+	user_processes = int(args.processes[0])
+
+	"""
+	Only use the user specified process count if it is less
+	than the number of cpu cores. Use all cpu cores by default.
+	"""
+	if 0 < user_processes < processors:
+		processors = user_processes
 
 	print("\nTesting HMMs")
 	print('=============================================')
@@ -129,7 +135,7 @@ if __name__ == '__main__':
 	parser.add_argument('-m', '--hmm_models', metavar='HMM', nargs='+', help='''
 	The HMM model files representing proteins''')
 
-	parser.add_argument('-p', '--processes', metavar='PROCESSES', nargs=1, default=processors, help='''
+	parser.add_argument('-p', '--processes', metavar='PROCESSES', nargs=1, default=[cpu_num], help='''
 	Number of parallel processes to be used by hmmsearch.''')
 
 	cli_args = parser.parse_args()
@@ -150,7 +156,7 @@ if __name__ == '__main__':
 		proceed = False
 
 	if proceed:
-		main(cli_args)
+		main(cli_args, cpu_num)
 	else:
 		print("")
 		parser.print_help()
