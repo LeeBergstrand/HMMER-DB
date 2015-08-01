@@ -27,7 +27,7 @@ def extract_sequence_records(organism_file_path, file_type):
 	:return: Biopython sequence record object.
 	"""
 	try:
-		print(">> Opening FASTA file: " + organism_file_path)
+		print(">> Opening " + file_type.upper() + " file: " + organism_file_path)
 		handle = open(organism_file_path, "rU")
 		try:
 			records = list(SeqIO.parse(handle, file_type))

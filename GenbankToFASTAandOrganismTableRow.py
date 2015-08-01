@@ -13,8 +13,12 @@ Requirements: - This script requires the Biopython module: http://biopython.org/
 # Imports & Setup:
 import os
 import argparse
+from multiprocessing import cpu_count, Pool
+import functools
 
 from lib import *
+
+cpu_num = cpu_count()
 
 
 # ==========
@@ -22,25 +26,48 @@ from lib import *
 # ==========
 
 # ----------------------------------------------------------------------------------------
-def main(args):
-	input_file_path = args.in_file[0]
+def main(args, processors):
+	input_file_paths = list(args.in_file)
 	organism_info_flag = args.organism_info
 	annotation_flag = args.annotation
-
-	fasta_file_name = os.path.join(os.getcwd(), str(os.path.basename(input_file_path).split('.')[0]) + '.faa')
+	user_processes = int(args.processes[0])
 	csv_file_name = os.path.join(os.getcwd(), 'OrganismDB.csv')
 
+	"""
+	Only use the user specified process count if it is less
+	than the number of cpu cores. Use all cpu cores by default.
+	"""
+	file_count = len(input_file_paths)
+	if file_count < processors or user_processes < processors:
+		if file_count < user_processes:
+			process_count = file_count
+		else:
+			process_count = user_processes
+	else:
+		process_count = processors
+
+	print('Processing ' + str(file_count) + ' files using ' + str(process_count) + ' sub-processes...')
+
+	pool = Pool(processes=process_count)
+	csv_organism_rows = pool.map(functools.partial(proccess_file, annotation_flag=annotation_flag, organism_info_flag=organism_info_flag),
+	         input_file_paths)
+
+	write_csv(csv_organism_rows, csv_file_name)
+
+
+# ----------------------------------------------------------------------------------------
+def proccess_file(input_file_path, annotation_flag, organism_info_flag):
+	fasta_file_name = os.path.join(os.getcwd(), str(os.path.basename(input_file_path).split('.')[0]) + '.faa')
 	check_extension(input_file_path)
 	seq_records = extract_sequence_records(input_file_path, 'genbank')
-
 	for record in seq_records:
-		if organism_info_flag:
-			csv_row = get_organism_info(record)
-			write_csv(csv_row, csv_file_name)
-
 		if annotation_flag:
 			fasta = get_coding_annotation_fasta(record)
 			write_fasta(fasta, fasta_file_name)
+
+		if organism_info_flag:
+			csv_row = get_organism_info(record)
+			return csv_row
 
 
 # ----------------------------------------------------------------------------------------
@@ -61,7 +88,7 @@ def get_organism_info(seq_record):
 	When passed a sequence record object returns a string containing the organisms info.
 
 	:param seq_record: A Biopython sequence record object.
-	:return: A string containing a CSV file row.
+	:return: A list attributes to be written as a CSV file row.
 	"""
 	print(">> Extracting Organism Info...")
 	organism_id = seq_record.id
@@ -78,9 +105,8 @@ def get_organism_info(seq_record):
 	taxonomy = "_".join(seq_record.annotations['taxonomy'])
 	organism_genome_length = len(seq_record.seq)
 
-	organism_string = organism_id + "," + accession_type + "," + description + "," + source + "," + taxonomy + "," + str(
-		organism_genome_length) + "\n"
-	return organism_string
+	organism_list = [organism_id, accession_type, description, source, taxonomy, organism_genome_length]
+	return organism_list
 
 
 # -------------------------------------------------------------------------------------------------------------
@@ -138,7 +164,7 @@ def write_fasta(fasta, out_file_path):
 	:param out_file_path: The path for the output FASTA file.
 	"""
 	try:
-		print(">> Writing fasta File...")
+		print(">> Writing FASTA File...")
 		fasta_writer = open(out_file_path, "w")
 		fasta_writer.write(fasta)
 		fasta_writer.close()
@@ -148,20 +174,20 @@ def write_fasta(fasta, out_file_path):
 
 
 # ----------------------------------------------------------------------------------------
-def write_csv(organism_string, out_file_path):
+def write_csv(organism_row_list, out_file_path):
 	"""
 	Appends new row to the organism data CSV.
 
-	:param organism_string: A CSV row containing organism info.
+	:param organism_row_list: A list of CSV rows containing organism info.
 	:param out_file_path: The path to the output CSV file to append too.
 	"""
 	try:
-		print(">> Writing to organism info to CSV file...")
-		writer = open(out_file_path, "a")
-		writer.write(organism_string)
-		writer.close()
+		print("\n>> Writing to organism info to CSV file...")
+		with open(out_file_path, "w") as csv_out:
+			csv_writer = csv.writer(csv_out)
+			csv_writer.writerows(organism_row_list)
 	except IOError:
-		print("Failed to open " + "OrganismDB.csv")
+		print("Failed to write to " + "OrganismDB.csv")
 		sys.exit(1)
 	print(">> Done")
 
@@ -176,7 +202,7 @@ if __name__ == '__main__':
 
 	parser = argparse.ArgumentParser(description=descriptor)
 
-	parser.add_argument('-i', '--in_file', metavar='GENBANK', nargs=1, help='''
+	parser.add_argument('-i', '--in_file', metavar='GENBANK', nargs='+', help='''
 	The input Genbank file.''')
 
 	parser.add_argument('-O', '--organism_info', action='store_true', help='''
@@ -184,6 +210,9 @@ if __name__ == '__main__':
 
 	parser.add_argument('-A', '--annotation', action='store_true', help='''
 	Flag  to extract CDS from input file and write them to a FASTA file.''')
+
+	parser.add_argument('-p', '--processes', metavar='PROCESSES', nargs=1, default=[cpu_num], help='''
+	Number of parallel processes to be used.''')
 
 	cli_args = parser.parse_args()
 
@@ -200,7 +229,7 @@ if __name__ == '__main__':
 		proceed = False
 
 	if proceed:
-		main(cli_args)
+		main(cli_args, cpu_num)
 	else:
 		print("")
 		parser.print_help()
